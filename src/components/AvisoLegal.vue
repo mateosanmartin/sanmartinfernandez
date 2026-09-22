@@ -1,9 +1,7 @@
 <template>
-    <h2>Aviso legal</h2>
+  <h2>Aviso legal</h2>
 </template>
 
-<script setup>
-</script>
+<script setup></script>
 
-<style scoped>
-</style>
+<style scoped></style>

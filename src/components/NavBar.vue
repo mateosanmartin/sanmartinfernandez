@@ -15,8 +15,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue" // será boolean
-const isOpen = ref(false) // actívase cuando fago click
+import { ref } from "vue"; // será boolean
+const isOpen = ref(false); // actívase cuando fago click
 </script>
 
 <style scoped>
@@ -24,9 +24,11 @@ const isOpen = ref(false) // actívase cuando fago click
   display: flex;
   justify-content: space-between;
   align-items: center;
+  text-align: center;
   padding: 0.1rem 6rem;
-  background: #1b4965;
+  background: #4f976f;
   color: white;
+  height: 50px;
 }
 
 .logo {

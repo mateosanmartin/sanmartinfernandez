@@ -1,9 +1,7 @@
 <template>
-    <h2>Acerca de</h2>
+  <h2>Acerca de</h2>
 </template>
 
-<script setup>
-</script>
+<script setup></script>
 
-<style scoped>
-</style>
+<style scoped></style>

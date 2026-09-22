@@ -158,61 +158,6 @@ const dniInvalido = ref(false);
 const correoInvalido = ref(false);
 const movilInvalido = ref(false);
 
-const provincias = [
-  { id: 1, nombre: "A Coruña" },
-  { id: 2, nombre: "Álava" },
-  { id: 3, nombre: "Albacete" },
-  { id: 4, nombre: "Alicante" },
-  { id: 5, nombre: "Almería" },
-  { id: 6, nombre: "Asturias" },
-  { id: 7, nombre: "Ávila" },
-  { id: 8, nombre: "Badajoz" },
-  { id: 9, nombre: "Barcelona" },
-  { id: 10, nombre: "Bizkaia" },
-  { id: 11, nombre: "Burgos" },
-  { id: 12, nombre: "Cáceres" },
-  { id: 13, nombre: "Cádiz" },
-  { id: 14, nombre: "Cantabria" },
-  { id: 15, nombre: "Castellón" },
-  { id: 16, nombre: "Ceuta" },
-  { id: 17, nombre: "Ciudad Real" },
-  { id: 18, nombre: "Córdoba" },
-  { id: 19, nombre: "Cuenca" },
-  { id: 20, nombre: "Gipuzkoa" },
-  { id: 21, nombre: "Girona" },
-  { id: 22, nombre: "Granada" },
-  { id: 23, nombre: "Guadalajara" },
-  { id: 24, nombre: "Huelva" },
-  { id: 25, nombre: "Huesca" },
-  { id: 26, nombre: "Illes Balears" },
-  { id: 27, nombre: "Jaén" },
-  { id: 28, nombre: "La Rioja" },
-  { id: 29, nombre: "Las Palmas" },
-  { id: 30, nombre: "León" },
-  { id: 31, nombre: "Lleida" },
-  { id: 32, nombre: "Lugo" },
-  { id: 33, nombre: "Madrid" },
-  { id: 34, nombre: "Málaga" },
-  { id: 35, nombre: "Melilla" },
-  { id: 36, nombre: "Murcia" },
-  { id: 37, nombre: "Navarra" },
-  { id: 38, nombre: "Ourense" },
-  { id: 39, nombre: "Palencia" },
-  { id: 40, nombre: "Pontevedra" },
-  { id: 41, nombre: "Salamanca" },
-  { id: 42, nombre: "Santa Cruz de Tenerife" },
-  { id: 43, nombre: "Segovia" },
-  { id: 44, nombre: "Sevilla" },
-  { id: 45, nombre: "Soria" },
-  { id: 46, nombre: "Tarragona" },
-  { id: 47, nombre: "Teruel" },
-  { id: 48, nombre: "Toledo" },
-  { id: 49, nombre: "Valencia" },
-  { id: 50, nombre: "Valladolid" },
-  { id: 51, nombre: "Zamora" },
-  { id: 52, nombre: "Zaragoza" },
-];
-
 /// Zona de ciclo de vida
 
 onMounted(() => {
@@ -437,7 +382,7 @@ form {
 
 .campo input:focus,
 .campo select:focus {
-  border-color: #5fcf91;
+  border-color: #348358;
   box-shadow: 0 0 0 2px rgba(95, 207, 145, 0.15);
 }
 

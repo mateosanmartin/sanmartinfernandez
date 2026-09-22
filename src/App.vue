@@ -1,39 +1,67 @@
 <template>
   <div id="app">
     <NavBar />
-    <!-- Aquí se carga el componente principal DE MOMENTO-->
-    <router-view />
+
+    <main class="main-content">
+      <router-view />
+    </main>
+
     <FooTer />
   </div>
 </template>
 
 <script setup>
-import NavBar from "./components/NavBar.vue"
-import FooTer from "./components/FooTer.vue"
+import NavBar from "./components/NavBar.vue";
+import FooTer from "./components/FooTer.vue";
 </script>
 
 <style>
-/* 👇 Estilos globales mínimos */
 :global(body) {
-  margin: 0;               /* quita el margen por defecto del body */
-  background: #f6f6f6;     /* color de fondo general */
+  margin: 0;
+  background: #f6f6f6;
 }
 
 #app {
-  max-width: 80vw;
-  margin: 0 auto;          /* centra horizontalmente */
-  padding-top: 1rem;       /* 🔹 margen superior pequeño */
-  padding-bottom: 1rem;    /* 🔹 espacio para el futuro footer */
-  min-height: 100vh;       /* ocupa toda la altura de la pantalla */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* el contenido empieza arriba */
-}
-/* Cuando la pantalla es menor a 768px */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
 }
 
+/* NAVBAR */
+:global(nav) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+/* CONTENIDO */
+.main-content {
+  flex: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* FOOTER */
+:global(footer) {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+/* Móvil */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 70px;
+    padding-bottom: 70px;
+  }
+}
 </style>
