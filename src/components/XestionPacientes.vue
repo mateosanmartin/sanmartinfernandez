@@ -1,144 +1,209 @@
 <template>
   <div class="xestion-pacientes">
     <h4>👥 Xestión de pacientes</h4>
+
     <form @submit.prevent="gardarPaciente">
       <div class="fila">
         <div class="campo campo-dni">
-          <div class="campo campo-dni">
-            <label>DNI/NIE:</label>
-            <div class="input-container">
-              <input
-                v-model="novoPaciente.dni"
-                type="text"
-                required
-                style="text-align: center"
-                :class="{ 'input-error': dniInvalido }"
-                @blur="validarDNIFormulario"
-              />
-            </div>
-          </div>
+          <label for="dni">DNI/CIF:</label>
+          <input
+            id="dni"
+            v-model="novoPaciente.dni"
+            type="text"
+            required
+            maxlength="9"
+            style="text-align: center"
+            :class="{
+              'dni-valido': dniComprobado && dniValido,
+              'dni-invalido': dniComprobado && !dniValido,
+            }"
+            @input="
+              novoPaciente.dni = novoPaciente.dni.toUpperCase();
+              dniComprobado = true;
+            "
+          />
         </div>
+
         <div class="campo campo-nome">
-          <label>Nome:</label>
-          <input v-model="novoPaciente.nome" type="text" required />
+          <label for="nome">Nome:</label>
+          <input id="nome" v-model="novoPaciente.nome" type="text" required />
         </div>
+
         <div class="campo campo-apelidos">
-          <label>Apelidos:</label>
-          <input v-model="novoPaciente.apelidos" type="text" required />
+          <label for="apelidos">Apelidos:</label>
+          <input
+            id="apelidos"
+            v-model="novoPaciente.apelidos"
+            type="text"
+            required
+          />
         </div>
       </div>
+
       <div class="fila">
-        <div class="campo campo-fechaNacimiento">
-          <label>Fecha Nacimiento:</label>
-          <input v-model="novoPaciente.fechaNacimiento" type="date" required />
-        </div>
-        <div class="campo campo-correo">
-          <label>Correo:</label>
+        <div class="campo campo-fechanacimiento">
+          <label for="fechaNacimiento">Nacimiento:</label>
           <input
+            id="fechaNacimiento"
+            v-model="novoPaciente.fechaNacimiento"
+            type="date"
+            required
+          />
+        </div>
+
+        <div class="campo campo-correo">
+          <label for="correo">Correo:</label>
+          <input
+            id="correo"
             v-model="novoPaciente.correo"
             type="email"
             required
-            :class="{ 'input-error': correoInvalido }"
-            @blur="validarCorreoFormulario"
           />
         </div>
-        <div class="campo campo-movil">
-          <label>Móvil:</label>
+
+        <div class="campo campo-telefono">
+          <label for="telefono">Telefono:</label>
           <input
-            v-model="novoPaciente.movil"
+            id="telefono"
+            v-model="novoPaciente.telefono"
             type="tel"
-            required
-            :class="{ 'input-error': movilInvalido }"
-            @blur="validarMovilFormulario"
+            maxlength="9"
           />
         </div>
       </div>
+
       <div class="fila">
         <div class="campo campo-direccion">
-          <label>Dirección:</label>
-          <input v-model="novoPaciente.direccion" type="text" required />
+          <label for="direccion">Dirección:</label>
+          <input id="direccion" v-model="novoPaciente.direccion" type="text" />
         </div>
 
         <div class="campo campo-provincia">
-          <label>Provincia:</label>
-          <select v-model="novoPaciente.provincia" required>
-            <option value="" disabled>Selecciona unha provincia</option>
-
+          <label for="provincia">Provincia:</label>
+          <select
+            id="provincia"
+            v-model="novoPaciente.provincia"
+            @change="cargarMunicipios"
+            required
+          >
+            <option value="">Seleccionar</option>
             <option
               v-for="provincia in provincias"
               :key="provincia.id"
               :value="provincia.id"
             >
-              {{ provincia.nombre }}
+              {{ provincia.nm }}
             </option>
           </select>
         </div>
+
         <div class="campo campo-municipio">
-          <label>Municipio:</label>
-          <select v-model="novoPaciente.municipio" disabled>
-            <option value="">Selecciona un municipio</option>
+          <label for="municipio">Municipio:</label>
+          <select
+            id="municipio"
+            v-model="novoPaciente.municipio"
+            :disabled="!novoPaciente.provincia"
+          >
+            <option value="">Seleccionar</option>
+            <option
+              v-for="municipio in municipios"
+              :key="municipio.id"
+              :value="municipio.id"
+            >
+              {{ municipio.nm }}
+            </option>
           </select>
         </div>
       </div>
-      <span v-if="dniInvalido" class="mensaje-error">
-        ⚠️ DNI/NIE non válido ⚠️</span
+
+      <p v-if="dniComprobado && !dniValido" class="mensaje-dni">
+        ⚠️ O DNI introducido non é válido.
+      </p>
+
+      <p
+        v-if="novoPaciente.telefono !== '' && !telefonoValido"
+        class="mensaje-telefono"
       >
-      <span v-if="correoInvalido" class="mensaje-error">
-        ⚠️ Correo non válido ⚠️
-      </span>
-      <span v-if="movilInvalido" class="mensaje-error">
-        ⚠️ Número de teléfono non válido ⚠️
-      </span>
+        ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
+      </p>
+
       <button
         type="submit"
         class="btn-guardar"
-        :disabled="novoPaciente.dni === '' || novoPaciente.nome === ''"
+        :disabled="
+          novoPaciente.dni === '' ||
+          novoPaciente.nome === '' ||
+          !dniValido ||
+          !telefonoValido ||
+          novoPaciente.provincia === ''
+        "
       >
-        Gardar
+        {{ editandoIndex !== null ? "Actualizar" : "Gardar" }}
       </button>
     </form>
+
     <h4>📋 Listaxe de pacientes</h4>
-    <table v-if="pacientes.length > 0">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>DNI/CIF</th>
-          <th>Nome</th>
-          <th>Apelidos</th>
-          <th>Fecha Nacimiento</th>
-          <th>Correo</th>
-          <th>Móvil</th>
-          <th>Accións</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(u, index) in pacientes" :key="index">
-          <td style="text-align: center">{{ index + 1 }}</td>
-          <td style="text-align: center">{{ u.dni }}</td>
-          <td style="text-align: left">{{ u.nome }}</td>
-          <td style="text-align: left">{{ u.apelidos }}</td>
-          <td>{{ u.fechaNacimiento }}</td>
-          <td style="text-align: left">{{ u.correo }}</td>
-          <td style="text-align: center">{{ u.movil }}</td>
-          <td style="text-align: center">
-            <button @click="editarPaciente(index)" title="Editar">✏️</button>
-            <button @click="eliminarPaciente(index)" title="Eliminar">
-              🗑️
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+    <div class="tabla-contenedor" v-if="pacientes.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>DNI/CIF</th>
+            <th>Nome</th>
+            <th>Apelidos</th>
+            <th>Fecha Nacimiento</th>
+            <th>Correo</th>
+            <th>Telefono</th>
+            <th>Accións</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="(u, index) in pacientes" :key="index">
+            <td>{{ index + 1 }}</td>
+            <td class="dni-tabla">{{ u.dni }}</td>
+            <td>{{ u.nome }}</td>
+            <td>{{ u.apelidos }}</td>
+            <td>{{ u.fechaNacimiento }}</td>
+            <td>{{ u.correo }}</td>
+            <td>{{ u.telefono }}</td>
+
+            <td class="acciones">
+              <button
+                type="button"
+                @click="editarPaciente(index)"
+                title="Editar"
+              >
+                ✏️
+              </button>
+
+              <button
+                type="button"
+                @click="eliminarPaciente(index)"
+                title="Eliminar"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <p v-else>Non hai pacientes cargados.</p>
   </div>
 </template>
 
 <script setup>
-/// Zona de declaracións
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
+import { obtenerProvincias } from "../api/municipios.js";
+import { obtenerMunicipios } from "../api/municipios.js";
 
-const pacientes = ref([]); //almacena la lista de pacientes e os seus cambios
+const pacientes = ref([]);
+
+const provincias = ref([]);
+const municipios = ref([]);
 
 const novoPaciente = reactive({
   dni: "",
@@ -146,75 +211,24 @@ const novoPaciente = reactive({
   apelidos: "",
   fechaNacimiento: "",
   correo: "",
-  movil: "",
-  direccion: "",
   provincia: "",
   municipio: "",
+  telefono: "",
+  direccion: "",
+  activo: false,
+  tipoCuenta: "",
 });
 
-const pacienteEditando = ref(null);
+// Índice del paciente que estamos editando.
+// null significa que estamos creando uno nuevo.
+const editandoIndex = ref(null);
 
-const dniInvalido = ref(false);
-const correoInvalido = ref(false);
-const movilInvalido = ref(false);
+const dniComprobado = ref(false);
 
-/// Zona de ciclo de vida
+const dniValido = computed(() => {
+  const dni = novoPaciente.dni.trim().toUpperCase();
 
-onMounted(() => {
-  pacientes.value = [
-    {
-      dni: "12345678Z",
-      nome: "María",
-      apelidos: "García López",
-      fechaNacimiento: "1985-03-14",
-      correo: "maria.garcia@email.com",
-      movil: "600123456",
-      direccion: "Rúa do Príncipe, 24, 2º A, Vigo",
-    },
-    {
-      dni: "87654321X",
-      nome: "Xosé",
-      apelidos: "Fernández Rodríguez",
-      fechaNacimiento: "1978-07-22",
-      correo: "xose.fernandez@email.com",
-      movil: "611234567",
-      direccion: "Rúa Real, 15, 1º, A Coruña",
-    },
-    {
-      dni: "23456789D",
-      nome: "Laura",
-      apelidos: "Pérez González",
-      fechaNacimiento: "1992-11-05",
-      correo: "laura.perez@email.com",
-      movil: "622345678",
-      direccion: "Rúa Bispo Aguirre, 8, 3º B, Lugo",
-    },
-    {
-      dni: "34567890V",
-      nome: "Manuel",
-      apelidos: "López Castro",
-      fechaNacimiento: "1969-01-30",
-      correo: "manuel.lopez@email.com",
-      movil: "633456789",
-      direccion: "Rúa do Paseo, 32, 2º, Ourense",
-    },
-  ];
-});
-
-function validarDNI(dni) {
   const letras = "TRWAGMYFPDXBNJZSQVHLCKE";
-
-  dni = dni.toUpperCase().trim();
-
-  // NIE: X, Y o Z + 7 números + letra
-  if (/^[XYZ]\d{7}[A-Z]$/.test(dni)) {
-    const nie = dni.replace("X", "0").replace("Y", "1").replace("Z", "2");
-
-    const numero = parseInt(nie.substring(0, 8), 10);
-    const letra = nie.charAt(8);
-
-    return letras[numero % 23] === letra;
-  }
 
   // DNI: 8 números + letra
   if (/^\d{8}[A-Z]$/.test(dni)) {
@@ -224,89 +238,172 @@ function validarDNI(dni) {
     return letras[numero % 23] === letra;
   }
 
-  return false;
-}
-
-function validarDNIFormulario() {
-  if (novoPaciente.dni.trim() === "") {
-    dniInvalido.value = false;
-    return;
-  }
-
-  dniInvalido.value = !validarDNI(novoPaciente.dni);
-}
-
-function validarCorreo(correo) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(correo);
-}
-
-function validarMovil(movil) {
-  const regex = /^[6789]\d{8}$/;
-  return regex.test(movil);
-}
-
-function validarCorreoFormulario() {
-  correoInvalido.value = !validarCorreo(novoPaciente.correo);
-}
-
-function validarMovilFormulario() {
-  movilInvalido.value = !validarMovil(novoPaciente.movil);
-}
-
-/// Zona de métodos ou funcións
-
-function gardarPaciente() {
-  if (!validarDNI(novoPaciente.dni)) {
-    alert("O DNI introducido non é válido");
-    return;
-  }
-
-  if (pacienteEditando.value !== null) {
-    // Editar o paciente existente
-    pacientes.value[pacienteEditando.value] = {
-      ...novoPaciente,
+  // NIE: X/Y/Z + 7 números + letra
+  if (/^[XYZ]\d{7}[A-Z]$/.test(dni)) {
+    const prefijo = {
+      X: "0",
+      Y: "1",
+      Z: "2",
     };
-  } else {
-    // Crear un paciente novo
+
+    const numero = prefijo[dni.charAt(0)] + dni.substring(1, 8);
+    const letra = dni.charAt(8);
+
+    return letras[parseInt(numero, 10) % 23] === letra;
+  }
+
+  return false;
+});
+
+const telefonoValido = computed(() => {
+  const telefono = novoPaciente.telefono.trim();
+
+  // Debe empezar por 6 o 7 y tener exactamente 9 dígitos
+  return /^[67]\d{8}$/.test(telefono);
+});
+
+// Pacientes de ejemplo
+onMounted(async () => {
+  pacientes.value = [
+    {
+      dni: "12345678Z",
+      nome: "María",
+      apelidos: "Pérez García",
+      fechaNacimiento: "1985-03-15",
+      correo: "maria.perez@email.com",
+      provincia: "A Coruña",
+      municipio: "",
+      telefono: "600123456",
+      direccion: "Rúa Real, 15",
+      activo: true,
+      tipoCuenta: "particular",
+    },
+    {
+      dni: "X1234567L",
+      nome: "Xosé",
+      apelidos: "López Fernández",
+      fechaNacimiento: "1990-07-22",
+      correo: "xose.lopez@email.com",
+      provincia: "Lugo",
+      municipio: "",
+      telefono: "611234567",
+      direccion: "Rúa Maior, 24",
+      activo: true,
+      tipoCuenta: "particular",
+    },
+    {
+      dni: "87654321X",
+      nome: "Ana",
+      apelidos: "Rodríguez Castro",
+      fechaNacimiento: "1978-11-08",
+      correo: "ana.rodriguez@email.com",
+      provincia: "Ourense",
+      municipio: "",
+      telefono: "622345678",
+      direccion: "Avenida Galicia, 8",
+      activo: false,
+      tipoCuenta: "particular",
+    },
+    {
+      dni: "Y1234567X",
+      nome: "Laura",
+      apelidos: "Gómez Martínez",
+      fechaNacimiento: "1995-05-30",
+      correo: "laura.gomez@email.com",
+      provincia: "Pontevedra",
+      municipio: "",
+      telefono: "633456789",
+      direccion: "Rúa do Príncipe, 12",
+      activo: true,
+      tipoCuenta: "particular",
+    },
+  ];
+
+  provincias.value = await obtenerProvincias();
+});
+
+async function cargarMunicipios() {
+  if (novoPaciente.provincia === "") {
+    municipios.value = [];
+    return;
+  }
+
+  municipios.value = await obtenerMunicipios(novoPaciente.provincia);
+}
+
+// Gardar ou actualizar paciente
+function gardarPaciente() {
+  if (!dniValido.value) {
+    dniComprobado.value = true;
+    return;
+  }
+
+  if (editandoIndex.value === null) {
+    // Crear paciente nuevo
     pacientes.value.push({
       ...novoPaciente,
     });
+  } else {
+    // Actualizar paciente existente
+    pacientes.value[editandoIndex.value] = {
+      ...novoPaciente,
+    };
   }
 
-  // Limpar o formulario
+  limpiarFormulario();
+}
+
+// Limpiar formulario
+function limpiarFormulario() {
   Object.assign(novoPaciente, {
     dni: "",
     nome: "",
     apelidos: "",
     fechaNacimiento: "",
     correo: "",
-    movil: "",
-    direccion: "",
     provincia: "",
     municipio: "",
+    telefono: "",
+    direccion: "",
+    activo: false,
+    tipoCuenta: "",
   });
 
-  // Volver ao modo "crear"
-  pacienteEditando.value = null;
+  editandoIndex.value = null;
+  dniComprobado.value = false;
 }
 
-function cambiarProvincia() {
-  novoPaciente.municipio = "";
-}
-
+// Eliminar paciente
 function eliminarPaciente(index) {
-  pacientes.value.splice(index, 1); //elimina o paciente da lista
+  pacientes.value.splice(index, 1);
+
+  // Si estábamos editando ese paciente,
+  // limpiamos el formulario
+  if (editandoIndex.value === index) {
+    limpiarFormulario();
+  }
 }
 
+// Editar paciente
 function editarPaciente(index) {
-  pacienteEditando.value = index;
-
   const paciente = pacientes.value[index];
 
   Object.assign(novoPaciente, paciente);
+
+  editandoIndex.value = index;
+
+  // Mostrar el estado de validación del DNI
+  dniComprobado.value = true;
+
+  // Llevar el formulario hacia arriba
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 }
 </script>
+
+
 
 <style scoped>
 .xestion-pacientes {
