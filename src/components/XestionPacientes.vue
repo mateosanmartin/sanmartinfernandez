@@ -2,13 +2,13 @@
   <div class="xestion-pacientes">
     <h4>👥 Xestión de pacientes</h4>
 
-    <form @submit.prevent="gardarPaciente">
+    <form @submit.prevent="guardarPaciente">
       <div class="fila">
         <div class="campo campo-dni">
           <label for="dni">DNI/CIF:</label>
           <input
             id="dni"
-            v-model="novoPaciente.dni"
+            v-model="novoPaciente.dnipac"
             type="text"
             required
             maxlength="9"
@@ -18,7 +18,7 @@
               'dni-invalido': dniComprobado && !dniValido,
             }"
             @input="
-              novoPaciente.dni = novoPaciente.dni.toUpperCase();
+              novoPaciente.dnipac = novoPaciente.dnipac.toUpperCase();
               dniComprobado = true;
             "
           />
@@ -26,14 +26,19 @@
 
         <div class="campo campo-nome">
           <label for="nome">Nome:</label>
-          <input id="nome" v-model="novoPaciente.nome" type="text" required />
+          <input
+            id="nome"
+            v-model="novoPaciente.nomepac"
+            type="text"
+            required
+          />
         </div>
 
         <div class="campo campo-apelidos">
           <label for="apelidos">Apelidos:</label>
           <input
             id="apelidos"
-            v-model="novoPaciente.apelidos"
+            v-model="novoPaciente.apelpac"
             type="text"
             required
           />
@@ -42,10 +47,10 @@
 
       <div class="fila">
         <div class="campo campo-fechanacimiento">
-          <label for="fechaNacimiento">Nacimiento:</label>
+          <label for="fechaNacimiento">Fecha Nacimiento:</label>
           <input
             id="fechaNacimiento"
-            v-model="novoPaciente.fechaNacimiento"
+            v-model="novoPaciente.nacipac"
             type="date"
             required
           />
@@ -55,7 +60,7 @@
           <label for="correo">Correo:</label>
           <input
             id="correo"
-            v-model="novoPaciente.correo"
+            v-model="novoPaciente.mailpac"
             type="email"
             required
           />
@@ -65,7 +70,7 @@
           <label for="telefono">Telefono:</label>
           <input
             id="telefono"
-            v-model="novoPaciente.telefono"
+            v-model="novoPaciente.movilpac"
             type="tel"
             maxlength="9"
           />
@@ -75,14 +80,14 @@
       <div class="fila">
         <div class="campo campo-direccion">
           <label for="direccion">Dirección:</label>
-          <input id="direccion" v-model="novoPaciente.direccion" type="text" />
+          <input id="direccion" v-model="novoPaciente.dirpac" type="text" />
         </div>
 
         <div class="campo campo-provincia">
           <label for="provincia">Provincia:</label>
           <select
             id="provincia"
-            v-model="novoPaciente.provincia"
+            v-model="novoPaciente.propac"
             @change="cargarMunicipios"
             required
           >
@@ -101,8 +106,8 @@
           <label for="municipio">Municipio:</label>
           <select
             id="municipio"
-            v-model="novoPaciente.municipio"
-            :disabled="!novoPaciente.provincia"
+            v-model="novoPaciente.munipac"
+            :disabled="!novoPaciente.propac"
           >
             <option value="">Seleccionar</option>
             <option
@@ -121,7 +126,7 @@
       </p>
 
       <p
-        v-if="novoPaciente.telefono !== '' && !telefonoValido"
+        v-if="novoPaciente.movilpac !== '' && !telefonoValido"
         class="mensaje-telefono"
       >
         ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
@@ -131,11 +136,11 @@
         type="submit"
         class="btn-guardar"
         :disabled="
-          novoPaciente.dni === '' ||
-          novoPaciente.nome === '' ||
+          novoPaciente.dnipac === '' ||
+          novoPaciente.nomepac === '' ||
           !dniValido ||
           !telefonoValido ||
-          novoPaciente.provincia === ''
+          novoPaciente.propac === ''
         "
       >
         {{ editandoIndex !== null ? "Actualizar" : "Gardar" }}
@@ -162,12 +167,12 @@
         <tbody>
           <tr v-for="(u, index) in pacientes" :key="index">
             <td>{{ index + 1 }}</td>
-            <td class="dni-tabla">{{ u.dni }}</td>
-            <td>{{ u.nome }}</td>
-            <td>{{ u.apelidos }}</td>
-            <td>{{ u.fechaNacimiento }}</td>
-            <td>{{ u.correo }}</td>
-            <td>{{ u.telefono }}</td>
+            <td class="dni-tabla">{{ u.dnipac }}</td>
+            <td>{{ u.nomepac }}</td>
+            <td>{{ u.apelpac }}</td>
+            <td>{{ u.nacipac }}</td>
+            <td>{{ u.mailpac }}</td>
+            <td>{{ u.movilpac }}</td>
 
             <td class="acciones">
               <button
@@ -197,8 +202,8 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
-import { obtenerProvincias } from "../api/municipios.js";
-import { obtenerMunicipios } from "../api/municipios.js";
+import { obtenerProvincias, obtenerMunicipios } from "../api/municipios.js";
+import { getPacientes, savePaciente } from "../api/pacientes.js";
 
 const pacientes = ref([]);
 
@@ -206,27 +211,29 @@ const provincias = ref([]);
 const municipios = ref([]);
 
 const novoPaciente = reactive({
-  dni: "",
-  nome: "",
-  apelidos: "",
-  fechaNacimiento: "",
-  correo: "",
-  provincia: "",
-  municipio: "",
-  telefono: "",
-  direccion: "",
-  activo: false,
-  tipoCuenta: "",
+  dnipac: "",
+  nomepac: "",
+  apelpac: "",
+  nacipac: "",
+  mailpac: "",
+  movilpac: "",
+  dirpac: "",
+  propac: "",
+  munipac: "",
 });
 
 // Índice del paciente que estamos editando.
 // null significa que estamos creando uno nuevo.
+
+onMounted(async () => {
+  provincias.value = await obtenerProvincias();
+});
 const editandoIndex = ref(null);
 
 const dniComprobado = ref(false);
 
 const dniValido = computed(() => {
-  const dni = novoPaciente.dni.trim().toUpperCase();
+  const dni = novoPaciente.dnipac.trim().toUpperCase();
 
   const letras = "TRWAGMYFPDXBNJZSQVHLCKE";
 
@@ -256,117 +263,57 @@ const dniValido = computed(() => {
 });
 
 const telefonoValido = computed(() => {
-  const telefono = novoPaciente.telefono.trim();
+  const telefono = novoPaciente.movilpac.trim();
 
   // Debe empezar por 6 o 7 y tener exactamente 9 dígitos
   return /^[67]\d{8}$/.test(telefono);
 });
 
-// Pacientes de ejemplo
-onMounted(async () => {
-  pacientes.value = [
-    {
-      dni: "12345678Z",
-      nome: "María",
-      apelidos: "Pérez García",
-      fechaNacimiento: "1985-03-15",
-      correo: "maria.perez@email.com",
-      provincia: "A Coruña",
-      municipio: "",
-      telefono: "600123456",
-      direccion: "Rúa Real, 15",
-      activo: true,
-      tipoCuenta: "particular",
-    },
-    {
-      dni: "X1234567L",
-      nome: "Xosé",
-      apelidos: "López Fernández",
-      fechaNacimiento: "1990-07-22",
-      correo: "xose.lopez@email.com",
-      provincia: "Lugo",
-      municipio: "",
-      telefono: "611234567",
-      direccion: "Rúa Maior, 24",
-      activo: true,
-      tipoCuenta: "particular",
-    },
-    {
-      dni: "87654321X",
-      nome: "Ana",
-      apelidos: "Rodríguez Castro",
-      fechaNacimiento: "1978-11-08",
-      correo: "ana.rodriguez@email.com",
-      provincia: "Ourense",
-      municipio: "",
-      telefono: "622345678",
-      direccion: "Avenida Galicia, 8",
-      activo: false,
-      tipoCuenta: "particular",
-    },
-    {
-      dni: "Y1234567X",
-      nome: "Laura",
-      apelidos: "Gómez Martínez",
-      fechaNacimiento: "1995-05-30",
-      correo: "laura.gomez@email.com",
-      provincia: "Pontevedra",
-      municipio: "",
-      telefono: "633456789",
-      direccion: "Rúa do Príncipe, 12",
-      activo: true,
-      tipoCuenta: "particular",
-    },
-  ];
-
-  provincias.value = await obtenerProvincias();
-});
-
 async function cargarMunicipios() {
-  if (novoPaciente.provincia === "") {
+  if (novoPaciente.propac === "") {
     municipios.value = [];
     return;
   }
 
-  municipios.value = await obtenerMunicipios(novoPaciente.provincia);
+  municipios.value = await obtenerMunicipios(novoPaciente.propac);
 }
 
 // Gardar ou actualizar paciente
-function gardarPaciente() {
-  if (!dniValido.value) {
-    dniComprobado.value = true;
-    return;
-  }
+async function guardarPaciente() {
+  try {
+    //tomar el nombre del municipio seleccionado y asignarlo a novoPaciente.munipac
+    //y de la provincia seleccionado y asignarlo a novoPaciente.propac
+    const provincia = provincias.value.find(
+      (p) => p.id === novoPaciente.propac,
+    );
 
-  if (editandoIndex.value === null) {
-    // Crear paciente nuevo
-    pacientes.value.push({
-      ...novoPaciente,
-    });
-  } else {
-    // Actualizar paciente existente
-    pacientes.value[editandoIndex.value] = {
-      ...novoPaciente,
-    };
-  }
+    const municipio = municipios.value.find(
+      (m) => m.id === novoPaciente.munipac,
+    );
 
-  limpiarFormulario();
+    novoPaciente.propac = provincia.nm;
+    novoPaciente.munipac = municipio.nm;
+
+    const pacienteGuardado = await savePaciente(novoPaciente);
+    pacientes.value.push(pacienteGuardado);
+    console.log("Paciente gardado correctamente"); // Actualiza la lista de pacientes después de guardar
+  } catch (error) {
+    console.error("Error ao gardar paciente:", error);
+  }
 }
 
 // Limpiar formulario
 function limpiarFormulario() {
   Object.assign(novoPaciente, {
-    dni: "",
-    nome: "",
-    apelidos: "",
-    fechaNacimiento: "",
-    correo: "",
-    provincia: "",
-    municipio: "",
-    telefono: "",
-    direccion: "",
-    activo: false,
-    tipoCuenta: "",
+    dnipac: "",
+    nomepac: "",
+    apelpac: "",
+    nacipac: "",
+    mailpac: "",
+    movilpac: "",
+    dirpac: "",
+    propac: "",
+    munipac: "",
   });
 
   editandoIndex.value = null;
@@ -402,8 +349,6 @@ function editarPaciente(index) {
   });
 }
 </script>
-
-
 
 <style scoped>
 .xestion-pacientes {
