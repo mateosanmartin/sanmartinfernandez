@@ -120,7 +120,6 @@
           </select>
         </div>
       </div>
-
       <p v-if="dniComprobado && !dniValido" class="mensaje-dni">
         ⚠️ O DNI introducido non é válido.
       </p>
@@ -131,20 +130,24 @@
       >
         ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
       </p>
-
-      <button
-        type="submit"
-        class="btn-guardar"
-        :disabled="
-          novoPaciente.dnipac === '' ||
-          novoPaciente.nomepac === '' ||
-          !dniValido ||
-          !telefonoValido ||
-          novoPaciente.propac === ''
-        "
-      >
-        {{ editandoIndex !== null ? "Actualizar" : "Gardar" }}
-      </button>
+      <div class="botones-formulario">
+        <button
+          type="submit"
+          class="btn-guardar"
+          :disabled="
+            novoPaciente.dnipac === '' ||
+            novoPaciente.nomepac === '' ||
+            !dniValido ||
+            !telefonoValido ||
+            novoPaciente.propac === '' 
+          "
+        >
+          {{ editandoIndex !== null ? "Actualizar" : "Gardar" }}
+        </button>
+        <button type="button" class="btn-limpiar" @click="limpiarFormulario">
+          🧹
+        </button>
+      </div>
     </form>
 
     <h4>📋 Listaxe de pacientes</h4>
@@ -156,10 +159,8 @@
             <th>#</th>
             <th>DNI/CIF</th>
             <th>Nome</th>
-            <th>Apelidos</th>
-            <th>Fecha Nacimiento</th>
             <th>Correo</th>
-            <th>Telefono</th>
+            <th>Provincia</th>
             <th>Accións</th>
           </tr>
         </thead>
@@ -169,10 +170,8 @@
             <td>{{ index + 1 }}</td>
             <td class="dni-tabla">{{ u.dnipac }}</td>
             <td>{{ u.nomepac }}</td>
-            <td>{{ u.apelpac }}</td>
-            <td>{{ u.nacipac }}</td>
             <td>{{ u.mailpac }}</td>
-            <td>{{ u.movilpac }}</td>
+            <td>{{ u.propac }}</td>
 
             <td class="acciones">
               <button
@@ -203,7 +202,11 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
 import { obtenerProvincias, obtenerMunicipios } from "../api/municipios.js";
-import { getPacientes, savePaciente } from "../api/pacientes.js";
+import {
+  getPacientes,
+  savePaciente,
+  updatePaciente,
+} from "../api/pacientes.js";
 
 const pacientes = ref([]);
 
@@ -281,22 +284,42 @@ async function cargarMunicipios() {
 // Gardar ou actualizar paciente
 async function guardarPaciente() {
   try {
-    //tomar el nombre del municipio seleccionado y asignarlo a novoPaciente.munipac
-    //y de la provincia seleccionado y asignarlo a novoPaciente.propac
     const provincia = provincias.value.find(
-      (p) => p.id === novoPaciente.propac,
+      (p) => p.id === novoPaciente.propac
     );
 
     const municipio = municipios.value.find(
-      (m) => m.id === novoPaciente.munipac,
+      (m) => m.id === novoPaciente.munipac
     );
 
-    novoPaciente.propac = provincia.nm;
-    novoPaciente.munipac = municipio.nm;
+    const pacienteParaGuardar = {
+      ...novoPaciente,
+      propac: provincia.nm,
+      munipac: municipio.nm,
+    };
 
-    const pacienteGuardado = await savePaciente(novoPaciente);
-    pacientes.value.push(pacienteGuardado);
-    console.log("Paciente gardado correctamente"); // Actualiza la lista de pacientes después de guardar
+    let pacienteGuardado;
+
+    if (editandoIndex.value !== null) {
+      // ACTUALIZAR PACIENTE
+      const pacienteActual = pacientes.value[editandoIndex.value];
+
+      pacienteGuardado = await updatePaciente(
+        pacienteActual._id,
+        pacienteParaGuardar
+      );
+
+      pacientes.value[editandoIndex.value] = pacienteGuardado;
+    } else {
+      // CREAR PACIENTE
+      pacienteGuardado = await savePaciente(pacienteParaGuardar);
+
+      pacientes.value.push(pacienteGuardado);
+    }
+
+    limpiarFormulario();
+
+    console.log("Paciente gardado correctamente");
   } catch (error) {
     console.error("Error ao gardar paciente:", error);
   }
@@ -332,17 +355,32 @@ function eliminarPaciente(index) {
 }
 
 // Editar paciente
-function editarPaciente(index) {
+async function editarPaciente(index) {
   const paciente = pacientes.value[index];
 
   Object.assign(novoPaciente, paciente);
 
-  editandoIndex.value = index;
+  const provincia = provincias.value.find(
+    (p) => p.nm === paciente.propac
+  );
 
-  // Mostrar el estado de validación del DNI
+  if (provincia) {
+    novoPaciente.propac = provincia.id;
+
+    municipios.value = await obtenerMunicipios(provincia.id);
+
+    const municipio = municipios.value.find(
+      (m) => m.nm === paciente.munipac
+    );
+
+    if (municipio) {
+      novoPaciente.munipac = municipio.id;
+    }
+  }
+
+  editandoIndex.value = index;
   dniComprobado.value = true;
 
-  // Llevar el formulario hacia arriba
   window.scrollTo({
     top: 0,
     behavior: "smooth",
@@ -490,7 +528,7 @@ form {
 
 .btn-guardar {
   display: block;
-  margin: 0.5rem auto 0;
+  margin: 0.5rem 0 0;
 
   min-width: 130px;
   padding: 0.55rem 1.8rem;
@@ -524,6 +562,33 @@ form {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.btn-limpiar {
+  margin: 0.5rem 0 0;
+
+  border: 1px solid;
+  border-radius: 5px;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-limpiar:hover {
+  background-color: #c8cac9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.botones-formulario {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+} 
 
 /* =========================
    TÍTULOS

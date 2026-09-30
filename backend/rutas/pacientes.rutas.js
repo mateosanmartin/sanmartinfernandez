@@ -1,22 +1,49 @@
-import express from 'express'
-import Paciente from '../modelos/Paciente.js'
+import express from "express";
+import Paciente from "../modelos/Paciente.js";
 
-const router = express.Router()
+const router = express.Router();
 
+// CREAR PACIENTE
 router.post("/", async (req, res) => {
-    try {
-        console.log("Datos recibidos", req.body)
-        const paciente = new Paciente(req.body)
+  try {
+    console.log("Datos recibidos", req.body);
 
-        const nuevoPaciente = await paciente.save()
+    const paciente = new Paciente(req.body);
+    const nuevoPaciente = await paciente.save();
 
-        res.status(201).json(nuevoPaciente)
-    } catch (error){
-        console.error("ERROR AL CREAR PACIENTE:", error)
-        res.status(500).json({
-            mensaje: "Error al crear el paciente"
-        })
+    res.status(201).json(nuevoPaciente);
+  } catch (error) {
+    console.error("ERROR AL CREAR PACIENTE:", error);
+
+    res.status(500).json({
+      mensaje: "Error al crear el paciente",
+    });
+  }
+});
+
+// ACTUALIZAR PACIENTE
+router.put("/:id", async (req, res) => {
+  try {
+    const pacienteActualizado = await Paciente.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    if (!pacienteActualizado) {
+      return res.status(404).json({
+        mensaje: "Paciente no encontrado",
+      });
     }
-})
 
-export default router
+    res.json(pacienteActualizado);
+  } catch (error) {
+    console.error("ERROR AL ACTUALIZAR PACIENTE:", error);
+
+    res.status(500).json({
+      mensaje: "Error al actualizar el paciente",
+    });
+  }
+});
+
+export default router;
