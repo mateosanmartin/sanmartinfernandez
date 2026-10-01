@@ -15,7 +15,7 @@
             style="text-align: center"
             :class="{
               'dni-valido': dniComprobado && dniValido,
-              'dni-invalido': dniComprobado && !dniValido,
+              'input-error': dniComprobado && !dniValido,
             }"
             @input="
               novoPaciente.dnipac = novoPaciente.dnipac.toUpperCase();
@@ -120,13 +120,13 @@
           </select>
         </div>
       </div>
-      <p v-if="dniComprobado && !dniValido" class="mensaje-dni">
+      <p v-if="dniComprobado && !dniValido" class="mensaje-error">
         ⚠️ O DNI introducido non é válido.
       </p>
 
       <p
         v-if="novoPaciente.movilpac !== '' && !telefonoValido"
-        class="mensaje-telefono"
+        class="mensaje-error"
       >
         ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
       </p>
@@ -145,7 +145,7 @@
           {{ editandoIndex !== null ? "Actualizar" : "Gardar" }}
         </button>
         <button type="button" class="btn-limpiar" @click="limpiarFormulario">
-          🧹
+          {{ editandoIndex !== null ? "Cancelar" : "🧹" }}
         </button>
       </div>
     </form>
@@ -206,6 +206,7 @@ import {
   getPacientes,
   savePaciente,
   updatePaciente,
+  deletePaciente
 } from "../api/pacientes.js";
 
 const pacientes = ref([]);
@@ -230,6 +231,7 @@ const novoPaciente = reactive({
 
 onMounted(async () => {
   provincias.value = await obtenerProvincias();
+  pacientes.value = await getPacientes();
 });
 const editandoIndex = ref(null);
 
@@ -344,13 +346,22 @@ function limpiarFormulario() {
 }
 
 // Eliminar paciente
-function eliminarPaciente(index) {
-  pacientes.value.splice(index, 1);
+async function eliminarPaciente(index) {
+  try {
+    const paciente = pacientes.value[index];
 
-  // Si estábamos editando ese paciente,
-  // limpiamos el formulario
-  if (editandoIndex.value === index) {
-    limpiarFormulario();
+    await deletePaciente(paciente._id);
+
+    pacientes.value.splice(index, 1);
+
+    if (editandoIndex.value === index) {
+      limpiarFormulario();
+    }
+
+    console.log("Paciente eliminado correctamente");
+
+  } catch (error) {
+    console.error("Error al eliminar paciente:", error);
   }
 }
 
@@ -391,7 +402,7 @@ async function editarPaciente(index) {
 <style scoped>
 .xestion-pacientes {
   width: 100%;
-  padding: 2rem;
+  padding: 1.2rem 2rem;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
@@ -407,7 +418,7 @@ form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 .fila {
@@ -613,7 +624,7 @@ h4 {
 
 table {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 0.3rem;
 
   border-collapse: collapse;
 
