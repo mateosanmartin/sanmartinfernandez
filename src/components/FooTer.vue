@@ -14,10 +14,10 @@
   background: #4f976f;
   color: white;
   text-align: center;
-  padding: 0.2rem 6rem;
-  margin-top: 3rem;
+  padding: 0.2rem 1rem;
+  margin-top: 1rem;
   font-size: 0.9rem;
-  height: 50px;
+  height: 40px;
 }
 
 .footer-content {

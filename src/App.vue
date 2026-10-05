@@ -38,14 +38,14 @@ import FooTer from "./components/FooTer.vue";
 
 /* CONTENIDO */
 .main-content {
-  flex: 1;
-
   display: flex;
   justify-content: center;
   align-items: flex-start;
 
   width: 100%;
   box-sizing: border-box;
+
+  padding-bottom: 18px;
 }
 
 /* FOOTER */

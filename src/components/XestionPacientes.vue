@@ -120,6 +120,24 @@
           </select>
         </div>
       </div>
+      <div class="campo-politica">
+        <input
+          id="lodpac"
+          v-model="novoPaciente.lodpac"
+          type="checkbox"
+          required
+        />
+        <label for="lodpac">
+          Aceptar la
+          <router-link
+            class="link-politica"
+            to="/politicaprivacidad"
+            target="_blank"
+            required
+            >política de privacidad</router-link
+          >
+        </label>
+      </div>
       <p v-if="dniComprobado && !dniValido" class="mensaje-error">
         ⚠️ O DNI introducido non é válido.
       </p>
@@ -139,7 +157,8 @@
             novoPaciente.nomepac === '' ||
             !dniValido ||
             !telefonoValido ||
-            novoPaciente.propac === '' 
+            novoPaciente.propac === '' ||
+            novoPaciente.lodpac === false
           "
         >
           {{ editandoIndex !== null ? "Actualizar" : "Gardar" }}
@@ -206,7 +225,7 @@ import {
   getPacientes,
   savePaciente,
   updatePaciente,
-  deletePaciente
+  deletePaciente,
 } from "../api/pacientes.js";
 
 const pacientes = ref([]);
@@ -224,6 +243,7 @@ const novoPaciente = reactive({
   dirpac: "",
   propac: "",
   munipac: "",
+  lodpac: false,
 });
 
 // Índice del paciente que estamos editando.
@@ -287,11 +307,11 @@ async function cargarMunicipios() {
 async function guardarPaciente() {
   try {
     const provincia = provincias.value.find(
-      (p) => p.id === novoPaciente.propac
+      (p) => p.id === novoPaciente.propac,
     );
 
     const municipio = municipios.value.find(
-      (m) => m.id === novoPaciente.munipac
+      (m) => m.id === novoPaciente.munipac,
     );
 
     const pacienteParaGuardar = {
@@ -308,7 +328,7 @@ async function guardarPaciente() {
 
       pacienteGuardado = await updatePaciente(
         pacienteActual._id,
-        pacienteParaGuardar
+        pacienteParaGuardar,
       );
 
       pacientes.value[editandoIndex.value] = pacienteGuardado;
@@ -339,6 +359,7 @@ function limpiarFormulario() {
     dirpac: "",
     propac: "",
     munipac: "",
+    lodpac: false,
   });
 
   editandoIndex.value = null;
@@ -359,7 +380,6 @@ async function eliminarPaciente(index) {
     }
 
     console.log("Paciente eliminado correctamente");
-
   } catch (error) {
     console.error("Error al eliminar paciente:", error);
   }
@@ -371,18 +391,14 @@ async function editarPaciente(index) {
 
   Object.assign(novoPaciente, paciente);
 
-  const provincia = provincias.value.find(
-    (p) => p.nm === paciente.propac
-  );
+  const provincia = provincias.value.find((p) => p.nm === paciente.propac);
 
   if (provincia) {
     novoPaciente.propac = provincia.id;
 
     municipios.value = await obtenerMunicipios(provincia.id);
 
-    const municipio = municipios.value.find(
-      (m) => m.nm === paciente.munipac
-    );
+    const municipio = municipios.value.find((m) => m.nm === paciente.munipac);
 
     if (municipio) {
       novoPaciente.munipac = municipio.id;
@@ -402,11 +418,12 @@ async function editarPaciente(index) {
 <style scoped>
 .xestion-pacientes {
   width: 100%;
-  padding: 1.2rem 2rem;
+  padding: 0.5rem 2rem;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
+  margin-top: 1rem;
 }
 
 /* =========================
@@ -418,7 +435,7 @@ form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
 }
 
 .fila {
@@ -533,6 +550,38 @@ form {
   width: 100%;
 }
 
+.campo-politica {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.campo-politica input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.campo-politica label {
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.link-politica {
+  color: rgb(74, 189, 93);
+}
+
+.link-politica:hover {
+  color: rgb(1, 129, 59);
+}
+
+.tabla-contenedor {
+  margin-bottom: 0;
+}
+
 /* =========================
    BOTÓN
    ========================= */
@@ -599,7 +648,7 @@ form {
   display: flex;
   justify-content: center;
   gap: 5px;
-} 
+}
 
 /* =========================
    TÍTULOS

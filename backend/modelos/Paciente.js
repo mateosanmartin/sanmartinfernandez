@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import { type } from 'os';
+import { vModelCheckbox } from 'vue';
 
 const PacienteSchema = new mongoose.Schema(
 {
@@ -10,7 +12,8 @@ const PacienteSchema = new mongoose.Schema(
     movilpac: {type: String, required: true},
     dirpac: {type: String, required: false},
     propac: {type: String, required: true},
-    munipac: {type: String, required: true}
+    munipac: {type: String, required: true},
+    lodpac: {type: Boolean, required: true},
 },
 {
     collection: "pacientes"

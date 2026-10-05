@@ -28,7 +28,7 @@ const isOpen = ref(false); // actívase cuando fago click
   padding: 0.1rem 6rem;
   background: #4f976f;
   color: white;
-  height: 50px;
+  height: 70px;
 }
 
 .logo {
