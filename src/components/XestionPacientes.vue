@@ -22,6 +22,13 @@
               dniComprobado = true;
             "
           />
+          <button
+            type="button"
+            class="btn-buscar"
+            @click="buscarPaciente"
+          >
+            🔎
+          </button>
         </div>
 
         <div class="campo campo-nome">
@@ -302,6 +309,31 @@ async function cargarMunicipios() {
 
   municipios.value = await obtenerMunicipios(novoPaciente.propac);
 }
+
+async function buscarPaciente() {
+  const dni = novoPaciente.dnipac.trim().toUpperCase();
+
+  // Comprobar que el DNI sea válido
+  if (!dniValido.value) {
+    dniComprobado.value = true;
+    return;
+  }
+
+  // Buscar paciente por DNI
+  const index = pacientes.value.findIndex(
+    (paciente) => paciente.dnipac.toUpperCase() === dni
+  );
+
+  // Si no existe
+  if (index === -1) {
+    alert("No existe ningún paciente con ese DNI.");
+    return;
+  }
+
+  // Si existe, cargar sus datos
+  await editarPaciente(index);
+}
+
 
 // Gardar ou actualizar paciente
 async function guardarPaciente() {
@@ -642,6 +674,29 @@ form {
 .btn-limpiar:hover {
   background-color: #c8cac9;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-buscar {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #000000;
+  border-radius: 5px;
+
+  cursor: pointer;
+  font-size: 1rem;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.btn-buscar:hover {
+  background-color: #c8cac9;
+}
+
+.btn-buscar:active {
+  transform: scale(0.95);
 }
 
 .botones-formulario {
