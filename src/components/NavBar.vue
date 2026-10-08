@@ -9,7 +9,7 @@
     <ul :class="['menu', { open: isOpen }]">
       <li><RouterLink to="/">Inicio</RouterLink></li>
       <li><RouterLink to="/xestion-pacientes">Pacientes</RouterLink></li>
-      <li><RouterLink to="xestion-doctores">Doctores</RouterLink></li>
+      <li><RouterLink to="/xestion-doctores">Doctores</RouterLink></li>
       <li><RouterLink to="/sobrenos">Sobre nós</RouterLink></li>
     </ul>
   </nav>

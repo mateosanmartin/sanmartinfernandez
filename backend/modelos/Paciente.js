@@ -1,6 +1,4 @@
 import mongoose from 'mongoose';
-import { type } from 'os';
-import { vModelCheckbox } from 'vue';
 
 const PacienteSchema = new mongoose.Schema(
 {
