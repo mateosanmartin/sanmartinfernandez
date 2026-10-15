@@ -22,11 +22,7 @@
               dniComprobado = true;
             "
           />
-          <button
-            type="button"
-            class="btn-buscar"
-            @click="buscarPaciente"
-          >
+          <button type="button" class="btn-buscar" @click="buscarPaciente">
             🔎
           </button>
         </div>
@@ -234,6 +230,11 @@ import {
   updatePaciente,
   deletePaciente,
 } from "../api/pacientes.js";
+import {
+  alertaExito,
+  alertaError,
+  alertaConfirmacion,
+} from "../utils/alertas.js";
 
 const pacientes = ref([]);
 
@@ -321,7 +322,7 @@ async function buscarPaciente() {
 
   // Buscar paciente por DNI
   const index = pacientes.value.findIndex(
-    (paciente) => paciente.dnipac.toUpperCase() === dni
+    (paciente) => paciente.dnipac.toUpperCase() === dni,
   );
 
   // Si no existe
@@ -333,7 +334,6 @@ async function buscarPaciente() {
   // Si existe, cargar sus datos
   await editarPaciente(index);
 }
-
 
 // Gardar ou actualizar paciente
 async function guardarPaciente() {
@@ -355,6 +355,14 @@ async function guardarPaciente() {
     let pacienteGuardado;
 
     if (editandoIndex.value !== null) {
+      const confirmacion = await alertaConfirmacion(
+        "¿Estás seguro de que quieres actualizar este paciente?",
+      );
+
+      if (!confirmacion.isConfirmed) {
+        return;
+      }
+
       // ACTUALIZAR PACIENTE
       const pacienteActual = pacientes.value[editandoIndex.value];
 
@@ -364,18 +372,21 @@ async function guardarPaciente() {
       );
 
       pacientes.value[editandoIndex.value] = pacienteGuardado;
+
+      await alertaExito("El paciente se ha actualizado correctamente.");
     } else {
       // CREAR PACIENTE
       pacienteGuardado = await savePaciente(pacienteParaGuardar);
 
       pacientes.value.push(pacienteGuardado);
+
+      await alertaExito("El paciente se ha guardado correctamente.");
     }
 
     limpiarFormulario();
-
-    console.log("Paciente gardado correctamente");
   } catch (error) {
     console.error("Error ao gardar paciente:", error);
+    alertaError("Error al guardar paciente, contacte con el Administrador.");
   }
 }
 
@@ -401,23 +412,32 @@ function limpiarFormulario() {
 // Eliminar paciente
 async function eliminarPaciente(index) {
   try {
-    const paciente = pacientes.value[index];
+    const confirmacion = await alertaConfirmacion(
+      "¿Estás seguro de eliminar el paciente?",
+    );
+    if (confirmacion.isConfirmed) {
+      const paciente = pacientes.value[index];
 
-    await deletePaciente(paciente._id);
+      await deletePaciente(paciente._id);
 
-    pacientes.value.splice(index, 1);
+      pacientes.value.splice(index, 1);
 
-    if (editandoIndex.value === index) {
-      limpiarFormulario();
+      alertaExito("Paciente eliminado correctamente.");
+
+      if (editandoIndex.value === index) {
+        limpiarFormulario();
+      }
+    } else {
+      return;
     }
-
-    console.log("Paciente eliminado correctamente");
   } catch (error) {
     console.error("Error al eliminar paciente:", error);
+    alertaError("Error al eliminar paciente, contacte con el administrador.");
   }
 }
 
 // Editar paciente
+
 async function editarPaciente(index) {
   const paciente = pacientes.value[index];
 
@@ -436,6 +456,8 @@ async function editarPaciente(index) {
       novoPaciente.munipac = municipio.id;
     }
   }
+
+  novoPaciente.lodpac = true;
 
   editandoIndex.value = index;
   dniComprobado.value = true;

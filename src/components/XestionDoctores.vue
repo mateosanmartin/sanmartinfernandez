@@ -3,24 +3,12 @@
     <h4>🧑‍⚕️ Xestión de doctores</h4>
     <form @submit.prevent="guardarDoctor">
       <div class="fila">
-        <div class="campo campo-id">
-          <label>ID:</label>
-          <input
-            v-model="novoDoctor.iddoc"
-            v-on:input="novoDoctor.iddoc = novoDoctor.iddoc.toUpperCase()"
-            type="text"
-            required
-            style="text-align: center"
-          />
-        </div>
         <div
           v-if="novoDoctor.iddoc !== '' && (!validarDni() || !validarDni2())"
           class="error-message"
         >
           <p class="error">O DNI/CIF non é válido</p>
         </div>
-        <button type="button" @click="limpiaFormdoc">Limpar</button>
-        <button type="button" @click="buscarDoctor">Buscar</button>
         <div class="campo campo-nome">
           <label>Nome:</label>
           <input
@@ -32,7 +20,7 @@
           />
         </div>
         <div class="campo campo-apelido">
-          <label>Apelido:</label>
+          <label>Apelidos:</label>
           <input
             v-model="novoDoctor.apeldoc"
             type="text"
@@ -41,30 +29,22 @@
             required
           />
         </div>
+        <div class="campo campo-colexiacion">
+          <label>Colexiado:</label>
+          <select id="colexiacion" v-model="novoDoctor.coledoc" required>
+            <option value="" disabled selected>Seleccionar</option>
+            <option :value="true">Si</option>
+            <option :value="false">Non</option>
+          </select>
+        </div>
       </div>
       <div class="fila">
-        <div class="campo campo-data-nacimiento">
-          <label>Data de nacemento:</label>
-          <input v-model="novoDoctor.coledoc" type="date" required />
-        </div>
         <div class="campo campo-correo">
           <label>Correo:</label>
           <input v-model="novoDoctor.maildoc" type="email" required />
         </div>
-      </div>
-      <div class="fila">
-        <div class="campo campo-telefono">
-          <label>Telefono:</label>
-          <input v-model="novoDoctor.movildoc" type="text" required />
-        </div>
-        <div
-          v-if="novoDoctor.movildoc !== '' && !validarTelf()"
-          class="error-message"
-        >
-          <p class="error">O teléfono non é válido</p>
-        </div>
         <div class="campo campo-especialidad">
-          <label>Especialidad:</label>
+          <label>Especialidade:</label>
           <select id="especialidad" v-model="novoDoctor.espedoc" required>
             <option value="">Selecciona unha especialidad</option>
             <option
@@ -76,13 +56,25 @@
             </option>
           </select>
         </div>
+        <div class="campo campo-telefono">
+          <label>Telefono:</label>
+          <input v-model="novoDoctor.movildoc" type="text" required />
+        </div>
+        <div
+          v-if="novoDoctor.movildoc !== '' && !validarTelf()"
+          class="error-message"
+        >
+          <p class="error">O teléfono non é válido</p>
+        </div>
+      </div>
+      <div class="fila">
       </div>
       <div class="campo-condicions">
         <label>
           <input v-model="novoDoctor.loddoc" type="checkbox" /> Aceptar la
           <router-link
             class="link-politica"
-            to="/politica-privacidad"
+            to="/politicaprivacidad"
             target="_blank"
             required
           >
@@ -90,17 +82,22 @@
           </router-link>
         </label>
       </div>
-      <button
-        type="submit"
-        class="btn-guardar"
-        :disabled="
-          novoDoctor.nomedoc === '' ||
-          novoDoctor.apeldoc === '' ||
-          !novoDoctor.espedoc
-        "
-      >
-        Gardar
-      </button>
+      <div class="botones-formulario">
+        <button
+          type="submit"
+          class="btn-guardar"
+          :disabled="
+            novoDoctor.nomedoc === '' ||
+            novoDoctor.apeldoc === '' ||
+            !novoDoctor.espedoc
+          "
+        >
+          Gardar
+        </button>
+        <button type="button" class="btn-limpiar" @click="limpiaFormdoc">
+          🧹
+        </button>
+      </div>
     </form>
     <h4>📋 Listaxe de doctores</h4>
     <table v-if="doctores.length > 0">
@@ -124,9 +121,7 @@
           <td style="text-align: center">{{ u.espedoc }}</td>
           <td style="text-align: center">
             <button @click="editarDoctor(index)" title="Editar">✏️</button>
-            <button @click="eliminarDoctor(index)" title="Eliminar">
-              🗑️
-            </button>
+            <button @click="eliminarDoctor(index)" title="Eliminar">🗑️</button>
           </td>
         </tr>
       </tbody>
@@ -151,19 +146,18 @@ const doctores = ref([]); //almacena la lista de doctores e os seus cambios
 const especialidades = ref([]);
 
 const novoDoctor = reactive({
-    iddoc: "",
-    nomedoc: "",
-    apeldoc: "",
-    maildoc: "",
-    movildoc: "",
-    coledoc: "",
-    espedoc: "",
+  iddoc: "",
+  nomedoc: "",
+  apeldoc: "",
+  maildoc: "",
+  movildoc: "",
+  coledoc: "",
+  espedoc: "",
 });
 
 onMounted(async () => {
-    especialidades.value = await obtenerEspecialidades();
+  especialidades.value = await obtenerEspecialidades();
 });
-
 
 // Funciones auxiliares
 function corrixirNome() {
@@ -209,120 +203,341 @@ const limpiaFormdoc = () => {
 </script>
 
 <style scoped>
-.error {
-  color: red;
-  font-size: 0.9rem;
-  margin-top: 0.2rem;
-}
-
 .xestion-doctor {
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  background: white;
-  padding: clamp(1rem, 3vw, 2rem);
-  overflow: hidden;
+  padding: 0.5rem 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  margin-top: 1rem;
 }
 
+/* =========================
+   FORMULARIO
+   ========================= */
+
 form {
-  display: flex;
-  padding: 0;
   width: 100%;
+  display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
   box-sizing: border-box;
 }
 
 .fila {
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
   width: 100%;
+  align-items: center;
 }
+
+/* =========================
+   CAMPOS
+   ========================= */
 
 .campo {
   display: flex;
-  flex: 1 1 220px;
-  min-width: min(100%, 220px);
-  flex-direction: row;
-  align-items: stretch;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
   min-width: 0;
 }
 
 .campo label {
+  flex: 0 0 auto;
+  min-width: 80px;
+  color: #333;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: left;
+  white-space: nowrap;
 }
 
 .campo input,
 .campo select {
+  flex: 1;
+  min-width: 0;
   width: 100%;
-  min-height: 2.5rem;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid #d1d5db;
-  border-radius: 3px;
+  height: 38px;
+  padding: 0.5rem 0.7rem;
   box-sizing: border-box;
-  background: #fff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  color: #333;
+  background-color: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .campo input:focus,
 .campo select:focus {
-  outline: 2px solid rgba(5, 117, 89, 0.25);
-  border-color: #057559;
+  outline: none;
+  border-color: #348358;
+  box-shadow: 0 0 0 2px rgba(95, 207, 145, 0.15);
 }
 
-.fila > .error-message {
-  flex: 1 1 100%;
+/* Anchos específicos */
+
+.campo-id,
+.campo-nome,
+.campo-apelido,
+.campo-data-nacimiento,
+.campo-correo,
+.campo-telefono,
+.campo-especialidad {
+  width: 100%;
+}
+
+/* =========================
+   MENSAJES DE ERROR
+   ========================= */
+
+.error-message {
+  width: 100%;
   margin: 0;
+  color: #e53935;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.fila > button:not(.btn-guardar) {
-  min-height: 2.5rem;
-  align-self: flex-end;
+.error {
+  margin: 0;
+  color: #e53935;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.campo input:invalid:focus {
+  border-color: #e53935;
+}
+
+/* =========================
+   POLÍTICA DE PRIVACIDAD
+   ========================= */
+
+.campo-condicions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.2rem;
+}
+
+.campo-condicions label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.campo-condicions input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #348358;
+}
+
+.link-politica {
+  color: rgb(74, 189, 93);
+}
+
+.link-politica:hover {
+  color: rgb(1, 129, 59);
+}
+
+/* =========================
+   BOTONES DEL FORMULARIO
+   ========================= */
+
+.botones-formulario {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
 }
 
 .btn-guardar {
-  background-color: #057559;
-  color: white;
-  border: 3px solid #00aa1c;
-  border-image: linear-gradient(45deg, #00aa1c, #0000ff) 1;
-  /* Define los dos colores y el ángulo */
-  padding: 20px;
-  padding: 0.4rem 1.5rem;
-  border-radius: 0px;
-  cursor: pointer;
-  margin: 0 auto;
   display: block;
+  margin: 0.5rem 0 0;
+  min-width: 130px;
+  padding: 0.55rem 1.8rem;
+
+  background-color: #89fcbd;
+  color: #174d32;
+
+  border: 1px solid #5fcf91;
+  border-radius: 5px;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
 }
 
-.btn-guardar:hover {
-  background-color: #637a76;
-  border-radius: 0px;
+.btn-guardar:hover:not(:disabled) {
+  background-color: #70e9a9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-guardar:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn-guardar:disabled {
-  background-color: #e0e0e0;
-  color: #999;
-  border-color: #ccc;
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.7;
 }
 
-.btn-guardar:disabled:hover {
-  background-color: #e0e0e0;
+.btn-limpiar {
+  margin: 0.5rem 0 0;
+  width: 34.22px;
+  height: 40.78px;
+
+  background-color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
 }
+
+.btn-limpiar:hover {
+  background-color: #c8cac9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-limpiar:active {
+  transform: scale(0.95);
+}
+
+/* =========================
+   TÍTULOS
+   ========================= */
+
+h4 {
+  margin: 0 0 1.2rem;
+  padding: 0.7rem 1rem;
+
+  background-color: #89fcbd;
+  color: #174d32;
+
+  border-radius: 5px;
+
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* =========================
+   TABLA
+   ========================= */
+
+.tabla-contenedor {
+  width: 100%;
+  margin-bottom: 0;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  margin-top: 0.3rem;
+
+  border-collapse: collapse;
+
+  font-size: 0.85rem;
+  background-color: #ffffff;
+
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 0.7rem 0.6rem;
+  border: 1px solid #e1e1e1;
+  vertical-align: middle;
+}
+
+th {
+  background-color: #f3f7f5;
+  color: #333;
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td {
+  text-align: center;
+  color: #444;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+tbody tr:hover {
+  background-color: #f1fff7;
+}
+
+/* =========================
+   BOTONES DE ACCIONES
+   ========================= */
+
+td button {
+  width: 32px;
+  height: 32px;
+
+  margin: 0 2px;
+
+  background: #ffffff;
+  border: 1px solid #d5d9dc;
+  border-radius: 4px;
+
+  cursor: pointer;
+  font-size: 0.95rem;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+td button:hover {
+  background-color: #f0f0f0;
+  border-color: #aaa;
+}
+
+td button:active {
+  transform: scale(0.95);
+}
+
+/* =========================
+   OTROS ELEMENTOS
+   ========================= */
 
 .button {
-  background: none;
   border: 2px solid #ddd;
   cursor: pointer;
   font-size: 1rem;
@@ -335,52 +550,92 @@ form {
   padding-right: 5rem;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+/* =========================
+   MENSAJE SIN DOCTORES
+   ========================= */
+
+.xestion-doctor > p {
+  padding: 1rem;
   margin-top: 1rem;
-  font-size: 0.8rem;
-  border: 1px solid #ddd;
-  display: block;
-  overflow-x: auto;
-  white-space: nowrap;
-}
 
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 0.7rem;
-  text-align: left;
-}
-
-th {
   text-align: center;
+  color: #777;
+
   background-color: #f8f9fa;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
 }
 
-h4 {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  background-color: #07c751;
-  color: white;
+/* =========================
+   TABLET
+   ========================= */
+
+@media (max-width: 1000px) {
+  .fila {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  table {
+    font-size: 0.78rem;
+  }
+
+  th,
+  td {
+    padding: 0.55rem 0.4rem;
+  }
 }
+
+/* =========================
+   MÓVIL
+   ========================= */
 
 @media (max-width: 768px) {
   .xestion-doctor {
     padding: 1rem;
+    border-radius: 5px;
   }
 
   .fila {
+    display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.7rem;
     align-items: stretch;
   }
 
-  .campo,
-  .fila > button:not(.btn-guardar) {
-    width: 100%;
+  .campo {
+    align-items: center;
+  }
+
+  .campo label {
+    min-width: 105px;
+  }
+
+  .campo input,
+  .campo select {
+    height: 40px;
+  }
+
+  .campo-condicions {
+    justify-content: flex-start;
+  }
+
+  .botones-formulario {
+    flex-wrap: wrap;
+  }
+
+  /* Permite desplazar la tabla horizontalmente */
+  .tabla-contenedor {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 650px;
+    white-space: nowrap;
+  }
+
+  th,
+  td {
+    padding: 0.6rem;
   }
 }
 </style>
