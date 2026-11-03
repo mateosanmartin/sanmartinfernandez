@@ -22,9 +22,12 @@ export async function getDoctores() {
 
 // Obtener doctores por especialidad
 export async function getDoctorByEspecialidad(especialidad) {
-    const res = await axios.get(`${API_URL}/doctores/${especialidad}`);
+    const res = await axios.get(
+        `${API_URL}/doctores/especialidad/${encodeURIComponent(especialidad)}`
+    );
+
     return res.data;
-} 
+}
 
 // Actualizar doctor
 export async function modifyDoctor(id, doctor) {

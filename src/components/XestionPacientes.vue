@@ -76,6 +76,11 @@
             v-model="novoPaciente.movilpac"
             type="tel"
             maxlength="9"
+            :class="{
+              '': telefonoComprobado && telefonoValido,
+              'input-error': telefonoComprobado && !telefonoValido,
+            }"
+            @input="telefonoComprobado = true"
           />
         </div>
       </div>
@@ -145,10 +150,7 @@
         ⚠️ O DNI introducido non é válido.
       </p>
 
-      <p
-        v-if="novoPaciente.movilpac !== '' && !telefonoValido"
-        class="mensaje-error"
-      >
+      <p v-if="telefonoComprobado && !telefonoValido" class="mensaje-error">
         ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
       </p>
       <div class="botones-formulario">
@@ -264,6 +266,8 @@ onMounted(async () => {
 const editandoIndex = ref(null);
 
 const dniComprobado = ref(false);
+
+const telefonoComprobado = ref(false);
 
 const dniValido = computed(() => {
   const dni = novoPaciente.dnipac.trim().toUpperCase();
@@ -407,6 +411,7 @@ function limpiarFormulario() {
 
   editandoIndex.value = null;
   dniComprobado.value = false;
+  telefonoComprobado.value = false;
 }
 
 // Eliminar paciente
@@ -461,6 +466,7 @@ async function editarPaciente(index) {
 
   editandoIndex.value = index;
   dniComprobado.value = true;
+  telefonoComprobado.value = true;
 
   window.scrollTo({
     top: 0,
@@ -560,11 +566,6 @@ form {
 .input-error {
   border: 2px solid #e53935 !important;
   background-color: #fff5f5;
-}
-
-.input-error:focus {
-  border-color: #e53935 !important;
-  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.15) !important;
 }
 
 .mensaje-error {
