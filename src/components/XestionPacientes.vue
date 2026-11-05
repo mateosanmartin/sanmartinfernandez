@@ -14,13 +14,18 @@
             maxlength="9"
             style="text-align: center"
             :class="{
-              'dni-valido': dniComprobado && dniValido,
-              'input-error': dniComprobado && !dniValido,
+              'dni-valido':
+                dniComprobado && novoPaciente.dnipac.trim() !== '' && dniValido,
+              'input-error':
+                dniComprobado &&
+                novoPaciente.dnipac.trim() !== '' &&
+                !dniValido,
             }"
             @input="
               novoPaciente.dnipac = novoPaciente.dnipac.toUpperCase();
-              dniComprobado = true;
+              dniComprobado = false;
             "
+            @blur="dniComprobado = true"
           />
           <button type="button" class="btn-buscar" @click="buscarPaciente">
             🔎
@@ -70,17 +75,24 @@
         </div>
 
         <div class="campo campo-telefono">
-          <label for="telefono">Telefono:</label>
+          <label for="telefono">Teléfono:</label>
           <input
             id="telefono"
             v-model="novoPaciente.movilpac"
             type="tel"
             maxlength="9"
             :class="{
-              '': telefonoComprobado && telefonoValido,
-              'input-error': telefonoComprobado && !telefonoValido,
+              'dni-valido':
+                telefonoComprobado &&
+                novoPaciente.movilpac.trim() !== '' &&
+                telefonoValido,
+              'input-error':
+                telefonoComprobado &&
+                novoPaciente.movilpac.trim() !== '' &&
+                !telefonoValido,
             }"
-            @input="telefonoComprobado = true"
+            @input="telefonoComprobado = false"
+            @blur="telefonoComprobado = novoPaciente.movilpac.trim() !== ''"
           />
         </div>
       </div>
@@ -128,6 +140,7 @@
           </select>
         </div>
       </div>
+
       <div class="campo-politica">
         <input
           id="lodpac"
@@ -146,13 +159,25 @@
           >
         </label>
       </div>
-      <p v-if="dniComprobado && !dniValido" class="mensaje-error">
+
+      <p
+        v-if="dniComprobado && novoPaciente.dnipac.trim() !== '' && !dniValido"
+        class="mensaje-error"
+      >
         ⚠️ O DNI introducido non é válido.
       </p>
 
-      <p v-if="telefonoComprobado && !telefonoValido" class="mensaje-error">
+      <p
+        v-if="
+          telefonoComprobado &&
+          novoPaciente.movilpac.trim() !== '' &&
+          !telefonoValido
+        "
+        class="mensaje-error"
+      >
         ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
       </p>
+
       <div class="botones-formulario">
         <button
           type="submit"
@@ -174,10 +199,21 @@
       </div>
     </form>
 
-    <h4>📋 Listaxe de pacientes</h4>
+    <h4 class="titulo-listado">
+      📋 Listaxe de pacientes
+
+      <button
+        type="button"
+        class="btn-pdf"
+        @click="exportarPacientes"
+        :disabled="pacientes.length === 0"
+      >
+        🖨️
+      </button>
+    </h4>
 
     <div class="tabla-contenedor" v-if="pacientes.length > 0">
-      <table>
+      <table class="tabla-pacientes">
         <thead>
           <tr>
             <th>#</th>
@@ -190,8 +226,10 @@
         </thead>
 
         <tbody>
-          <tr v-for="(u, index) in pacientes" :key="index">
-            <td>{{ index + 1 }}</td>
+          <tr v-for="(u, index) in pacientesPaginados" :key="u._id || index">
+            <td>
+              {{ (paginaActual - 1) * pacientesPorPagina + index + 1 }}
+            </td>
             <td class="dni-tabla">{{ u.dnipac }}</td>
             <td>{{ u.nomepac }}</td>
             <td>{{ u.mailpac }}</td>
@@ -200,7 +238,11 @@
             <td class="acciones">
               <button
                 type="button"
-                @click="editarPaciente(index)"
+                @click="
+                  editarPaciente(
+                    (paginaActual - 1) * pacientesPorPagina + index,
+                  )
+                "
                 title="Editar"
               >
                 ✏️
@@ -208,15 +250,57 @@
 
               <button
                 type="button"
-                @click="eliminarPaciente(index)"
+                @click="
+                  eliminarPaciente(
+                    (paginaActual - 1) * pacientesPorPagina + index,
+                  )
+                "
                 title="Eliminar"
               >
                 🗑️
               </button>
             </td>
           </tr>
+
+          <!-- Filas vacías para mantener siempre la misma altura -->
+          <tr
+            v-for="n in pacientesPorPagina - pacientesPaginados.length"
+            :key="'vacia-' + n"
+            class="fila-vacia"
+          >
+            <td colspan="6">&nbsp;</td>
+          </tr>
         </tbody>
       </table>
+
+      <!-- PAGINACIÓN -->
+      <div class="paginacion" v-if="totalPaginas > 1">
+        <button
+          type="button"
+          @click="cambiarPagina(paginaActual - 1)"
+          :disabled="paginaActual === 1"
+        >
+          Anterior
+        </button>
+
+        <button
+          v-for="pagina in totalPaginas"
+          :key="pagina"
+          type="button"
+          @click="cambiarPagina(pagina)"
+          :class="{ activa: paginaActual === pagina }"
+        >
+          {{ pagina }}
+        </button>
+
+        <button
+          type="button"
+          @click="cambiarPagina(paginaActual + 1)"
+          :disabled="paginaActual === totalPaginas"
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
 
     <p v-else>Non hai pacientes cargados.</p>
@@ -237,11 +321,32 @@ import {
   alertaError,
   alertaConfirmacion,
 } from "../utils/alertas.js";
+import { generarPDF } from "../utils/pdf.js";
 
 const pacientes = ref([]);
 
 const provincias = ref([]);
 const municipios = ref([]);
+
+// PAGINACIÓN
+const pacientesPorPagina = 5;
+const paginaActual = ref(1);
+
+const totalPaginas = computed(() =>
+  Math.ceil(pacientes.value.length / pacientesPorPagina),
+);
+
+const pacientesPaginados = computed(() => {
+  const inicio = (paginaActual.value - 1) * pacientesPorPagina;
+
+  return pacientes.value.slice(inicio, inicio + pacientesPorPagina);
+});
+
+function cambiarPagina(pagina) {
+  if (pagina >= 1 && pagina <= totalPaginas.value) {
+    paginaActual.value = pagina;
+  }
+}
 
 const novoPaciente = reactive({
   dnipac: "",
@@ -259,15 +364,15 @@ const novoPaciente = reactive({
 // Índice del paciente que estamos editando.
 // null significa que estamos creando uno nuevo.
 
+const editandoIndex = ref(null);
+
+const dniComprobado = ref(false);
+const telefonoComprobado = ref(false);
+
 onMounted(async () => {
   provincias.value = await obtenerProvincias();
   pacientes.value = await getPacientes();
 });
-const editandoIndex = ref(null);
-
-const dniComprobado = ref(false);
-
-const telefonoComprobado = ref(false);
 
 const dniValido = computed(() => {
   const dni = novoPaciente.dnipac.trim().toUpperCase();
@@ -335,6 +440,9 @@ async function buscarPaciente() {
     return;
   }
 
+  // Ir a la página donde está el paciente
+  paginaActual.value = Math.floor(index / pacientesPorPagina) + 1;
+
   // Si existe, cargar sus datos
   await editarPaciente(index);
 }
@@ -384,6 +492,9 @@ async function guardarPaciente() {
 
       pacientes.value.push(pacienteGuardado);
 
+      // Ir a la última página si se crea un paciente nuevo
+      paginaActual.value = totalPaginas.value;
+
       await alertaExito("El paciente se ha guardado correctamente.");
     }
 
@@ -420,12 +531,18 @@ async function eliminarPaciente(index) {
     const confirmacion = await alertaConfirmacion(
       "¿Estás seguro de eliminar el paciente?",
     );
+
     if (confirmacion.isConfirmed) {
       const paciente = pacientes.value[index];
 
       await deletePaciente(paciente._id);
 
       pacientes.value.splice(index, 1);
+
+      // Comprobar que la página actual siga existiendo
+      if (paginaActual.value > totalPaginas.value && totalPaginas.value > 0) {
+        paginaActual.value = totalPaginas.value;
+      }
 
       alertaExito("Paciente eliminado correctamente.");
 
@@ -442,7 +559,6 @@ async function eliminarPaciente(index) {
 }
 
 // Editar paciente
-
 async function editarPaciente(index) {
   const paciente = pacientes.value[index];
 
@@ -472,6 +588,22 @@ async function editarPaciente(index) {
     top: 0,
     behavior: "smooth",
   });
+}
+
+// EXPORTAR PACIENTES A PDF
+function exportarPacientes() {
+  generarPDF(
+    "Listado de pacientes",
+    ["Nº", "DNI/CIF", "Nombre", "Correo", "Provincia"],
+    pacientes.value.map((paciente, index) => [
+      index + 1,
+      paciente.dnipac,
+      paciente.nomepac,
+      paciente.mailpac,
+      paciente.propac,
+    ]),
+    "listado_pacientes.pdf",
+  );
 }
 </script>
 
@@ -922,4 +1054,98 @@ td button:active {
     padding: 0.6rem;
   }
 }
+
+/* TÍTULO Y BOTÓN PDF */
+
+.titulo-listado {
+  position: relative;
+  text-align: center;
+}
+
+.titulo-listado .btn-pdf {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.btn-pdf {
+  margin-right: 10px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-pdf:hover {
+  background-color: #c8cac9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   PAGINACIÓN
+   ========================= */
+
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.paginacion button {
+  min-width: 34px;
+  height: 32px;
+  padding: 0 10px;
+
+  background-color: #ffffff;
+  color: #174d32;
+
+  border: 1px solid #5fcf91;
+  border-radius: 5px;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.paginacion button:hover:not(:disabled) {
+  background-color: #e5ffef;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.paginacion button.activa {
+  background-color: #89fcbd;
+  color: #174d32;
+  border-color: #5fcf91;
+}
+
+.paginacion button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Filas vacías: conservan el tamaño de la tabla */
+.fila-vacia td {
+  height: 46px;
+  padding: 0.7rem 0.6rem;
+  background-color: #ffffff;
+}
+
+.fila-vacia:hover {
+  background-color: #ffffff;
+}
+
 </style>

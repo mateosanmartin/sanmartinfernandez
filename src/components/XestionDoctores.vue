@@ -48,7 +48,7 @@
         </div>
 
         <div class="campo">
-          <label for="telefono">Móvil:</label>
+          <label for="telefono">Teléfono:</label>
           <input
             id="telefono"
             v-model="novoDoctor.movildoc"
@@ -72,6 +72,13 @@
               {{ especialidade.nm }}
             </option>
           </select>
+          <button
+            type="button"
+            class="btn-buscar"
+            @click="buscarDoctoresPorEspecialidad"
+          >
+            🔎
+          </button>
         </div>
       </div>
 
@@ -107,7 +114,18 @@
       </div>
     </form>
 
-    <h4>📋 Listaxe de doctores</h4>
+    <h4 class="titulo-listado">
+      📋 Listaxe de doctores
+
+      <button
+        type="button"
+        class="btn-pdf"
+        @click="exportarDoctores"
+        :disabled="doctores.length === 0"
+      >
+        🖨️
+      </button>
+    </h4>
 
     <div class="tabla-contenedor" v-if="doctores.length > 0">
       <table>
@@ -175,6 +193,8 @@ import {
   alertaConfirmacion,
 } from "../utils/alertas.js";
 
+import { generarPDF } from "../utils/pdf.js";
+
 // LISTAS
 const doctores = ref([]);
 const especialidades = ref([]);
@@ -238,6 +258,11 @@ async function filtrarDoctores() {
   }
 }
 
+async function buscarDoctoresPorEspecialidad() {
+  filtroEspecialidad.value = novoDoctor.espedoc;
+  await filtrarDoctores();
+}
+
 // GUARDAR O ACTUALIZAR DOCTOR
 async function guardarDoctor() {
   if (!telefonoValido.value) {
@@ -297,6 +322,7 @@ function editarDoctor(index) {
 
   idDoctorEditar.value = doctor._id;
   editando.value = true;
+  telefonoComprobado.value = true;
 
   window.scrollTo({
     top: 0,
@@ -345,6 +371,7 @@ function limpiaFormdoc() {
 
   editando.value = false;
   idDoctorEditar.value = null;
+  telefonoComprobado.value = false;
 }
 
 // CORREGIR NOMBRE
@@ -367,6 +394,32 @@ function corrixirApelido() {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
   }
+}
+
+// EXPORTAR DOCTORES A PDF
+function exportarDoctores() {
+  generarPDF(
+    "Listado de doctores",
+    [
+      "ID",
+      "Apellidos",
+      "Nombre",
+      "Móvil",
+      "Correo",
+      "Especialidad",
+      "Colegiado",
+    ],
+    doctores.value.map((doctor) => [
+      doctor.iddoc,
+      doctor.apeldoc,
+      doctor.nomedoc,
+      doctor.movildoc,
+      doctor.maildoc,
+      doctor.espedoc,
+      doctor.coledoc ? "Si" : "Non",
+    ]),
+    "listado_doctores.pdf",
+  );
 }
 </script>
 
@@ -517,6 +570,38 @@ form {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+.btn-pdf {
+  margin-right: 10px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-pdf:hover {
+  background-color: #c8cac9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-buscar {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #000000;
+  border-radius: 5px;
+
+  cursor: pointer;
+  font-size: 1rem;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
 /* TÍTULOS */
 
 h4 {
@@ -530,6 +615,17 @@ h4 {
 }
 
 /* TABLA */
+.titulo-listado {
+  position: relative;
+  text-align: center;
+}
+
+.titulo-listado .btn-pdf {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 .tabla-contenedor {
   margin-bottom: 0;

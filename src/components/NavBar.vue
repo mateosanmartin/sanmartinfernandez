@@ -1,6 +1,8 @@
 <template>
   <nav class="navbar">
-    <div class="logo">XestiónApp</div>
+    <div class="logo">
+      <RouterLink to="/"><img src="/public/logo.png" alt="logo"></RouterLink>
+    </div>
 
     <!-- NUEVO -->
     <button class="hamburger" @click="isOpen = !isOpen">☰</button>
