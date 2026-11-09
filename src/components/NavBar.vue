@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <div class="logo">
-      <RouterLink to="/"><img src="/public/logo.png" alt="logo"></RouterLink>
+      <RouterLink to="/"><img src="/logo.png" alt="logo"></RouterLink>
     </div>
 
     <!-- NUEVO -->

@@ -322,6 +322,7 @@ import {
   alertaConfirmacion,
 } from "../utils/alertas.js";
 import { generarPDF } from "../utils/pdf.js";
+import { usePacienteStore } from "../store/pacienteStore.js";
 
 const pacientes = ref([]);
 
@@ -373,6 +374,11 @@ onMounted(async () => {
   provincias.value = await obtenerProvincias();
   pacientes.value = await getPacientes();
 });
+
+function seleccionarPaciente(paciente) {
+    const pacienteStore = usePacienteStore();
+    pacienteStore.seleccionarPaciente(paciente)
+}
 
 const dniValido = computed(() => {
   const dni = novoPaciente.dnipac.trim().toUpperCase();
