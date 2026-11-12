@@ -7,6 +7,7 @@ import NotFound from "../components/NotFound.vue";
 import AvisoLegal from "../components/AvisoLegal.vue";
 import PoliticaPrivacidad from "../components/PoliticaPrivacidad.vue";
 import XestionDoctores from "../components/XestionDoctores.vue";
+import XestionCitas from "../components/XestionCitas.vue";
 
 const routes = [
   { path: "/", name: IniCio, component: IniCio },
@@ -28,6 +29,11 @@ const routes = [
     name: XestionDoctores,
     component: XestionDoctores,
   },
+  {
+    path: "/xestion-citas",
+    name: XestionCitas,
+    component: XestionCitas
+  }
 ];
 
 const router = createRouter({

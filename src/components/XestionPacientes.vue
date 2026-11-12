@@ -504,6 +504,8 @@ async function guardarPaciente() {
       await alertaExito("El paciente se ha guardado correctamente.");
     }
 
+    seleccionarPaciente(pacienteGuardado);
+
     limpiarFormulario();
   } catch (error) {
     console.error("Error ao gardar paciente:", error);
@@ -569,6 +571,8 @@ async function editarPaciente(index) {
   const paciente = pacientes.value[index];
 
   Object.assign(novoPaciente, paciente);
+
+  seleccionarPaciente(paciente);
 
   const provincia = provincias.value.find((p) => p.nm === paciente.propac);
 
