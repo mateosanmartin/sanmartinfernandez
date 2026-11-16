@@ -1,10 +1,10 @@
+
 import mongoose from "mongoose";
 
 const CitaSchema = new mongoose.Schema(
     {
-        pacienteId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Paciente",
+        pacienteDNI: {
+            type: String,
             required: true
         },
         doctorId: {

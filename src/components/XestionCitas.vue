@@ -41,7 +41,7 @@
         <div class="campo">
           <label>ID Doctor:</label>
           <input
-            :value="doctorSeleccionado ? doctorSeleccionado.iddoc : ''"
+            :value="doctorSeleccionado ? doctorSeleccionado._id : ''"
             type="text"
             placeholder="ID Doctor"
             readonly
@@ -188,7 +188,7 @@ const doctorSeleccionado = computed(() => {
 
 const formularioValido = computed(() => {
   return (
-    pacienteStore.pacienteId &&
+    pacienteStore.dnipac &&
     novaCita.doctorId !== "" &&
     novaCita.fecha !== "" &&
     novaCita.hora !== "" &&
@@ -206,7 +206,7 @@ onMounted(async () => {
 });
 
 watch(
-  () => pacienteStore.pacienteId,
+  () => pacienteStore.dnipac,
   async () => {
     limpiarFormulario();
     await cargarCitas();
@@ -215,13 +215,18 @@ watch(
 );
 
 async function cargarCitas() {
-  if (!pacienteStore.pacienteId) {
+  if (!pacienteStore.dnipac) {
     citas.value = [];
     return;
   }
 
   try {
-    citas.value = await getCitas(pacienteStore.pacienteId);
+    const todasLasCitas = await getCitas(pacienteStore.dnipac);
+
+    citas.value = todasLasCitas.filter(
+      cita => cita.pacienteDNI === pacienteStore.dnipac
+    );
+
   } catch (error) {
     console.error("Error ao cargar citas:", error);
     citas.value = [];
@@ -235,7 +240,7 @@ async function guardarCita() {
   }
 
   const datosCita = {
-    pacienteId: pacienteStore.pacienteId,
+    pacienteDNI: pacienteStore.dnipac,
     doctorId: novaCita.doctorId,
     fecha: novaCita.fecha,
     hora: novaCita.hora,

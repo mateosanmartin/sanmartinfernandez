@@ -1,10 +1,11 @@
+
 import axios from "axios";
 
 const API_URL = "http://localhost:3000/api/citas";
 
-export const getCitas = async (pacienteId) => {
+export const getCitas = async (pacienteDNI) => {
   const respuesta = await axios.get(API_URL, {
-    params: pacienteId ? { pacienteId } : {},
+    params: pacienteDNI ? { pacienteDNI } : {},
   });
 
   return respuesta.data;

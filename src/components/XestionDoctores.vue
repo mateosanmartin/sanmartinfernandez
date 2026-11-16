@@ -1,3 +1,4 @@
+
 <template>
   <div class="xestion-doctores">
     <h4>🩺 Xestión de doctores</h4>
@@ -55,7 +56,13 @@
             type="tel"
             maxlength="9"
             required
-            @blur="telefonoComprobado = true"
+            :class="{
+              'input-error':
+                telefonoComprobado &&
+                novoDoctor.movildoc.trim() !== '' &&
+                !telefonoValido,
+            }"
+            @blur="telefonoComprobado = novoDoctor.movildoc.trim() !== ''"
             @input="telefonoComprobado = false"
           />
         </div>
@@ -82,14 +89,14 @@
         </div>
       </div>
 
-      <p
-        v-if="
-          telefonoComprobado && novoDoctor.movildoc !== '' && !telefonoValido
-        "
-        class="mensaje-error"
-      >
-        ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
-      </p>
+      <div class="contenedor-errores" aria-live="polite">
+        <p
+          class="mensaje-error"
+          :class="{ 'error-oculto': !hayErrorValidacion }"
+        >
+          {{ mensajeValidacion }}
+        </p>
+      </div>
 
       <div class="botones-formulario">
         <button
@@ -99,7 +106,6 @@
             novoDoctor.nomedoc.trim() === '' ||
             novoDoctor.apeldoc.trim() === '' ||
             novoDoctor.maildoc.trim() === '' ||
-            novoDoctor.movildoc.trim() === '' ||
             !telefonoValido ||
             novoDoctor.coledoc === '' ||
             novoDoctor.espedoc === ''
@@ -128,10 +134,21 @@
     </h4>
 
     <div class="tabla-contenedor" v-if="doctores.length > 0">
-      <table>
+      <table class="tabla-doctores">
+        <colgroup>
+          <col class="col-numero" />
+          <col class="col-apelidos" />
+          <col class="col-nome" />
+          <col class="col-movil" />
+          <col class="col-correo" />
+          <col class="col-especialidade" />
+          <col class="col-colexiado" />
+          <col class="col-accions" />
+        </colgroup>
+
         <thead>
           <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Apelidos</th>
             <th>Nome</th>
             <th>Móvil</th>
@@ -143,8 +160,8 @@
         </thead>
 
         <tbody>
-          <tr v-for="(u, index) in doctores" :key="u._id">
-            <td>{{ u.iddoc }}</td>
+          <tr v-for="(u, index) in doctores" :key="u._id || index">
+            <td>{{ index + 1 }}</td>
             <td>{{ u.apeldoc }}</td>
             <td>{{ u.nomedoc }}</td>
             <td>{{ u.movildoc }}</td>
@@ -207,7 +224,6 @@ const telefonoComprobado = ref(false);
 
 // FORMULARIO
 const novoDoctor = reactive({
-  iddoc: "",
   nomedoc: "",
   apeldoc: "",
   maildoc: "",
@@ -219,9 +235,21 @@ const novoDoctor = reactive({
 // VALIDAR TELÉFONO
 const telefonoValido = computed(() => {
   const telefono = novoDoctor.movildoc.trim();
-
   return /^[67]\d{8}$/.test(telefono);
 });
+
+const mensajeValidacion = computed(() => {
+  if (
+    telefonoComprobado.value &&
+    novoDoctor.movildoc.trim() !== "" &&
+    !telefonoValido.value
+  ) {
+    return "⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.";
+  }
+  return "";
+});
+
+const hayErrorValidacion = computed(() => mensajeValidacion.value !== "");
 
 // CARGAR DATOS AL ENTRAR
 onMounted(async () => {
@@ -301,7 +329,6 @@ async function guardarDoctor() {
     await filtrarDoctores();
   } catch (error) {
     console.error("Error al guardar doctor:", error);
-
     alertaError("Error al guardar doctor, contacte con el Administrador.");
   }
 }
@@ -311,7 +338,6 @@ function editarDoctor(index) {
   const doctor = doctores.value[index];
 
   Object.assign(novoDoctor, {
-    iddoc: doctor.iddoc,
     nomedoc: doctor.nomedoc,
     apeldoc: doctor.apeldoc,
     maildoc: doctor.maildoc,
@@ -352,7 +378,6 @@ async function eliminarDoctor(index) {
     }
   } catch (error) {
     console.error("Error al eliminar doctor:", error);
-
     alertaError("Error al eliminar doctor, contacte con el administrador.");
   }
 }
@@ -360,7 +385,6 @@ async function eliminarDoctor(index) {
 // LIMPIAR FORMULARIO
 function limpiaFormdoc() {
   Object.assign(novoDoctor, {
-    iddoc: "",
     nomedoc: "",
     apeldoc: "",
     maildoc: "",
@@ -401,7 +425,7 @@ function exportarDoctores() {
   generarPDF(
     "Listado de doctores",
     [
-      "ID",
+      "Nº",
       "Apellidos",
       "Nombre",
       "Móvil",
@@ -409,8 +433,8 @@ function exportarDoctores() {
       "Especialidad",
       "Colegiado",
     ],
-    doctores.value.map((doctor) => [
-      doctor.iddoc,
+    doctores.value.map((doctor, index) => [
+      index + 1,
       doctor.apeldoc,
       doctor.nomedoc,
       doctor.movildoc,
@@ -427,6 +451,7 @@ function exportarDoctores() {
 .xestion-doctores {
   width: 100%;
   padding: 0.5rem 2rem;
+  padding-bottom: 1.25rem;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
@@ -435,12 +460,11 @@ function exportarDoctores() {
 }
 
 /* FORMULARIO */
-
 form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.65rem;
   margin-bottom: 0.9rem;
 }
 
@@ -451,8 +475,6 @@ form {
   width: 100%;
   align-items: center;
 }
-
-/* CAMPOS */
 
 .campo {
   display: flex;
@@ -495,25 +517,33 @@ form {
   box-shadow: 0 0 0 2px rgba(95, 207, 145, 0.15);
 }
 
-.campo-filtro {
-  max-width: 450px;
-  margin-bottom: 1rem;
+.input-error {
+  border: 2px solid #e53935 !important;
+  background-color: #fff5f5;
 }
 
-.campo-filtro label {
-  min-width: 175px;
+.contenedor-errores {
+  height: 18px;
+  min-height: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.mensaje-error {
-  display: block;
-  margin-top: 0.3rem;
-  color: #e53935;
+.contenedor-errores .mensaje-error {
+  margin: 0;
+  line-height: 18px;
   font-size: 0.8rem;
+  color: #e53935;
   font-weight: 600;
+  text-align: center;
+}
+
+.error-oculto {
+  visibility: hidden;
 }
 
 /* BOTONES DEL FORMULARIO */
-
 .botones-formulario {
   display: flex;
   justify-content: center;
@@ -522,7 +552,8 @@ form {
 
 .btn-guardar {
   display: block;
-  margin: 0.5rem 0 0;
+  margin: 0;
+  margin-top: -7px;
   min-width: 130px;
   padding: 0.55rem 1.8rem;
   background-color: #89fcbd;
@@ -553,7 +584,8 @@ form {
 }
 
 .btn-limpiar {
-  margin: 0.5rem 0 0;
+  margin: 0;
+  margin-top: -7px;
   border: 1px solid;
   border-radius: 5px;
   font-size: 0.9rem;
@@ -570,40 +602,28 @@ form {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.btn-pdf {
-  margin-right: 10px;
-  border: 1px solid;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease,
-    box-shadow 0.2s ease;
-}
-
-.btn-pdf:hover {
-  background-color: #c8cac9;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
 .btn-buscar {
   width: 38px;
   height: 38px;
   padding: 0;
   border: 1px solid #000000;
   border-radius: 5px;
-
   cursor: pointer;
   font-size: 1rem;
-
   transition:
     background-color 0.2s ease,
     transform 0.1s ease;
 }
 
-/* TÍTULOS */
+.btn-buscar:hover {
+  background-color: #c8cac9;
+}
 
+.btn-buscar:active {
+  transform: scale(0.95);
+}
+
+/* TÍTULOS */
 h4 {
   margin: 0 0 1.2rem;
   padding: 0.7rem 1rem;
@@ -614,7 +634,6 @@ h4 {
   font-weight: 600;
 }
 
-/* TABLA */
 .titulo-listado {
   position: relative;
   text-align: center;
@@ -627,20 +646,41 @@ h4 {
   transform: translateY(-50%);
 }
 
-.tabla-contenedor {
-  margin-bottom: 0;
-  width: 100%;
+.btn-pdf {
+  margin-right: 10px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-table {
-  width: 100%;
-  margin-top: 0.3rem;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-  background-color: #fff;
+.btn-pdf:hover {
+  background-color: #c8cac9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* TABLA */
+.tabla-contenedor {
+  height: 468px;
+  overflow: auto;
   border: 1px solid #ddd;
   border-radius: 5px;
-  overflow: hidden;
+}
+
+.tabla-doctores {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  border: none;
+  overflow: visible;
+  font-size: 0.85rem;
+  background-color: #fff;
 }
 
 th,
@@ -650,17 +690,57 @@ td {
   vertical-align: middle;
 }
 
-th {
+.tabla-doctores thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background-color: #f3f7f5;
   color: #333;
   text-align: center;
   font-weight: 600;
   white-space: nowrap;
+  border: 1.8px solid;
 }
 
 td {
   text-align: center;
   color: #444;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ANCHOS DE LAS COLUMNAS */
+.tabla-doctores .col-numero {
+  width: 5%;
+}
+
+.tabla-doctores .col-apelidos {
+  width: 15%;
+}
+
+.tabla-doctores .col-nome {
+  width: 11%;
+}
+
+.tabla-doctores .col-movil {
+  width: 11%;
+}
+
+.tabla-doctores .col-correo {
+  width: 23%;
+}
+
+.tabla-doctores .col-especialidade {
+  width: 15%;
+}
+
+.tabla-doctores .col-colexiado {
+  width: 9%;
+}
+
+.tabla-doctores .col-accions {
+  width: 11%;
 }
 
 tbody tr:nth-child(even) {
@@ -672,7 +752,6 @@ tbody tr:hover {
 }
 
 /* BOTONES DE ACCIONES */
-
 td button {
   width: 32px;
   height: 32px;
@@ -698,7 +777,6 @@ td button:active {
 }
 
 /* MENSAJE SIN DOCTORES */
-
 .xestion-doctores > p {
   padding: 1rem;
   margin-top: 1rem;
@@ -710,13 +788,12 @@ td button:active {
 }
 
 /* TABLET */
-
 @media (max-width: 1000px) {
   .fila {
     grid-template-columns: 1fr 1fr;
   }
 
-  table {
+  .tabla-doctores {
     font-size: 0.78rem;
   }
 
@@ -727,7 +804,6 @@ td button:active {
 }
 
 /* MÓVIL */
-
 @media (max-width: 768px) {
   .xestion-doctores {
     padding: 1rem;
@@ -753,14 +829,8 @@ td button:active {
     height: 40px;
   }
 
-  .campo-filtro {
-    max-width: 100%;
-  }
-
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  .tabla-doctores {
+    min-width: 1000px;
   }
 
   th,

@@ -24,15 +24,21 @@ const isOpen = ref(false); // actívase cuando fago click
 </script>
 
 <style scoped>
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   text-align: center;
+
+  width: 100%;
+  height: 70px;
+
   padding: 0.1rem 6rem;
+  box-sizing: border-box;
+
   background: #4f976f;
   color: white;
-  height: 70px;
 }
 
 .logo {

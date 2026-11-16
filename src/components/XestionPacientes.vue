@@ -204,58 +204,56 @@
     </h4>
 
     <div class="tabla-contenedor" v-if="pacientes.length > 0">
-      <div class="tabla-scroll">
-        <table class="tabla-pacientes">
-          <colgroup>
-            <col class="col-numero" />
-            <col class="col-dni" />
-            <col class="col-nome" />
-            <col class="col-correo" />
-            <col class="col-provincia" />
-            <col class="col-accions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>DNI/CIF</th>
-              <th>Nome</th>
-              <th>Correo</th>
-              <th>Provincia</th>
-              <th>Accións</th>
-            </tr>
-          </thead>
+      <table class="tabla-pacientes">
+        <colgroup>
+          <col class="col-numero" />
+          <col class="col-dni" />
+          <col class="col-nome" />
+          <col class="col-correo" />
+          <col class="col-provincia" />
+          <col class="col-accions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>DNI/CIF</th>
+            <th>Nome</th>
+            <th>Correo</th>
+            <th>Provincia</th>
+            <th>Accións</th>
+          </tr>
+        </thead>
 
-          <tbody>
-            <tr v-for="(u, index) in pacientes" :key="u._id || index">
-              <td>
-                {{ index + 1 }}
-              </td>
-              <td class="dni-tabla">{{ u.dnipac }}</td>
-              <td>{{ u.nomepac }}</td>
-              <td>{{ u.mailpac }}</td>
-              <td>{{ u.propac }}</td>
+        <tbody>
+          <tr v-for="(u, index) in pacientes" :key="u._id || index">
+            <td>
+              {{ index + 1 }}
+            </td>
+            <td class="dni-tabla">{{ u.dnipac }}</td>
+            <td>{{ u.nomepac }}</td>
+            <td>{{ u.mailpac }}</td>
+            <td>{{ u.propac }}</td>
 
-              <td class="acciones">
-                <button
-                  type="button"
-                  @click="editarPaciente(index)"
-                  title="Editar"
-                >
-                  ✏️
-                </button>
+            <td class="acciones">
+              <button
+                type="button"
+                @click="editarPaciente(index)"
+                title="Editar"
+              >
+                ✏️
+              </button>
 
-                <button
-                  type="button"
-                  @click="eliminarPaciente(index)"
-                  title="Eliminar"
-                >
-                  🗑️
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              <button
+                type="button"
+                @click="eliminarPaciente(index)"
+                title="Eliminar"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <p v-else>Non hai pacientes cargados.</p>
@@ -711,10 +709,6 @@ form {
   color: rgb(1, 129, 59);
 }
 
-.tabla-contenedor {
-  margin-bottom: 0;
-}
-
 .xestion-pacientes {
   padding-bottom: 1.25rem;
 }
@@ -1040,11 +1034,6 @@ td button:active {
     height: 40px;
   }
 
-  /* El contenedor desplaza la tabla, sin romper sus columnas */
-  .tabla-scroll {
-    overflow-x: auto;
-  }
-
   .tabla-pacientes {
     min-width: 700px;
   }
@@ -1086,32 +1075,32 @@ td button:active {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Tabla con scroll vertical al superar aproximadamente seis pacientes */
-.tabla-scroll {
-  max-height: 378px;
-  overflow-y: auto;
-  overflow-x: auto;
+/* Contenedor con scroll */
+.tabla-contenedor {
+  height: 350px;
+  overflow: auto;
+  border: 1px solid #ddd;
   border-radius: 5px;
 }
 
+/* Tabla */
 .tabla-pacientes {
-  margin-top: 0;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  border: none;
+  overflow: visible;
 }
 
+/* Encabezado fijo */
 .tabla-pacientes thead th {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 10;
   background-color: #f3f7f5;
+  border: 1.8px solid;
 }
 
-.tabla-pacientes tbody tr {
-  height: 54px;
-}
-
-@media (max-width: 768px) {
-  .tabla-scroll {
-    max-height: 378px;
-  }
-}
 </style>
