@@ -159,24 +159,15 @@
           >
         </label>
       </div>
-
-      <p
-        v-if="dniComprobado && novoPaciente.dnipac.trim() !== '' && !dniValido"
-        class="mensaje-error"
-      >
-        ⚠️ O DNI introducido non é válido.
-      </p>
-
-      <p
-        v-if="
-          telefonoComprobado &&
-          novoPaciente.movilpac.trim() !== '' &&
-          !telefonoValido
-        "
-        class="mensaje-error"
-      >
-        ⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.
-      </p>
+      <!-- Una única línea reservada para errores: no desplaza el formulario -->
+      <div class="contenedor-errores" aria-live="polite">
+        <p
+          class="mensaje-error"
+          :class="{ 'error-oculto': !hayErrorValidacion }"
+        >
+          {{ mensajeValidacion }}
+        </p>
+      </div>
 
       <div class="botones-formulario">
         <button
@@ -213,93 +204,57 @@
     </h4>
 
     <div class="tabla-contenedor" v-if="pacientes.length > 0">
-      <table class="tabla-pacientes">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>DNI/CIF</th>
-            <th>Nome</th>
-            <th>Correo</th>
-            <th>Provincia</th>
-            <th>Accións</th>
-          </tr>
-        </thead>
+      <div class="tabla-scroll">
+        <table class="tabla-pacientes">
+          <colgroup>
+            <col class="col-numero" />
+            <col class="col-dni" />
+            <col class="col-nome" />
+            <col class="col-correo" />
+            <col class="col-provincia" />
+            <col class="col-accions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>DNI/CIF</th>
+              <th>Nome</th>
+              <th>Correo</th>
+              <th>Provincia</th>
+              <th>Accións</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          <tr v-for="(u, index) in pacientesPaginados" :key="u._id || index">
-            <td>
-              {{ (paginaActual - 1) * pacientesPorPagina + index + 1 }}
-            </td>
-            <td class="dni-tabla">{{ u.dnipac }}</td>
-            <td>{{ u.nomepac }}</td>
-            <td>{{ u.mailpac }}</td>
-            <td>{{ u.propac }}</td>
+          <tbody>
+            <tr v-for="(u, index) in pacientes" :key="u._id || index">
+              <td>
+                {{ index + 1 }}
+              </td>
+              <td class="dni-tabla">{{ u.dnipac }}</td>
+              <td>{{ u.nomepac }}</td>
+              <td>{{ u.mailpac }}</td>
+              <td>{{ u.propac }}</td>
 
-            <td class="acciones">
-              <button
-                type="button"
-                @click="
-                  editarPaciente(
-                    (paginaActual - 1) * pacientesPorPagina + index,
-                  )
-                "
-                title="Editar"
-              >
-                ✏️
-              </button>
+              <td class="acciones">
+                <button
+                  type="button"
+                  @click="editarPaciente(index)"
+                  title="Editar"
+                >
+                  ✏️
+                </button>
 
-              <button
-                type="button"
-                @click="
-                  eliminarPaciente(
-                    (paginaActual - 1) * pacientesPorPagina + index,
-                  )
-                "
-                title="Eliminar"
-              >
-                🗑️
-              </button>
-            </td>
-          </tr>
-
-          <!-- Filas vacías para mantener siempre la misma altura -->
-          <tr
-            v-for="n in pacientesPorPagina - pacientesPaginados.length"
-            :key="'vacia-' + n"
-            class="fila-vacia"
-          >
-            <td colspan="6">&nbsp;</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- PAGINACIÓN -->
-      <div class="paginacion" v-if="totalPaginas > 1">
-        <button
-          type="button"
-          @click="cambiarPagina(paginaActual - 1)"
-          :disabled="paginaActual === 1"
-        >
-          Anterior
-        </button>
-
-        <button
-          v-for="pagina in totalPaginas"
-          :key="pagina"
-          type="button"
-          @click="cambiarPagina(pagina)"
-          :class="{ activa: paginaActual === pagina }"
-        >
-          {{ pagina }}
-        </button>
-
-        <button
-          type="button"
-          @click="cambiarPagina(paginaActual + 1)"
-          :disabled="paginaActual === totalPaginas"
-        >
-          Siguiente
-        </button>
+                <button
+                  type="button"
+                  @click="eliminarPaciente(index)"
+                  title="Eliminar"
+                >
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -329,26 +284,6 @@ const pacientes = ref([]);
 const provincias = ref([]);
 const municipios = ref([]);
 
-// PAGINACIÓN
-const pacientesPorPagina = 5;
-const paginaActual = ref(1);
-
-const totalPaginas = computed(() =>
-  Math.ceil(pacientes.value.length / pacientesPorPagina),
-);
-
-const pacientesPaginados = computed(() => {
-  const inicio = (paginaActual.value - 1) * pacientesPorPagina;
-
-  return pacientes.value.slice(inicio, inicio + pacientesPorPagina);
-});
-
-function cambiarPagina(pagina) {
-  if (pagina >= 1 && pagina <= totalPaginas.value) {
-    paginaActual.value = pagina;
-  }
-}
-
 const novoPaciente = reactive({
   dnipac: "",
   nomepac: "",
@@ -376,8 +311,8 @@ onMounted(async () => {
 });
 
 function seleccionarPaciente(paciente) {
-    const pacienteStore = usePacienteStore();
-    pacienteStore.seleccionarPaciente(paciente)
+  const pacienteStore = usePacienteStore();
+  pacienteStore.seleccionarPaciente(paciente);
 }
 
 const dniValido = computed(() => {
@@ -409,6 +344,25 @@ const dniValido = computed(() => {
 
   return false;
 });
+
+const mensajeValidacion = computed(() => {
+  if (
+    dniComprobado.value &&
+    novoPaciente.dnipac.trim() !== "" &&
+    !dniValido.value
+  ) {
+    return "⚠️ O DNI introducido non é válido.";
+  }
+  if (
+    telefonoComprobado.value &&
+    novoPaciente.movilpac.trim() !== "" &&
+    !telefonoValido.value
+  ) {
+    return "⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.";
+  }
+  return "";
+});
+const hayErrorValidacion = computed(() => mensajeValidacion.value !== "");
 
 const telefonoValido = computed(() => {
   const telefono = novoPaciente.movilpac.trim();
@@ -445,9 +399,6 @@ async function buscarPaciente() {
     alert("No existe ningún paciente con ese DNI.");
     return;
   }
-
-  // Ir a la página donde está el paciente
-  paginaActual.value = Math.floor(index / pacientesPorPagina) + 1;
 
   // Si existe, cargar sus datos
   await editarPaciente(index);
@@ -498,9 +449,6 @@ async function guardarPaciente() {
 
       pacientes.value.push(pacienteGuardado);
 
-      // Ir a la última página si se crea un paciente nuevo
-      paginaActual.value = totalPaginas.value;
-
       await alertaExito("El paciente se ha guardado correctamente.");
     }
 
@@ -546,11 +494,6 @@ async function eliminarPaciente(index) {
       await deletePaciente(paciente._id);
 
       pacientes.value.splice(index, 1);
-
-      // Comprobar que la página actual siga existiendo
-      if (paginaActual.value > totalPaginas.value && totalPaginas.value > 0) {
-        paginaActual.value = totalPaginas.value;
-      }
 
       alertaExito("Paciente eliminado correctamente.");
 
@@ -636,7 +579,7 @@ form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.65rem;
   margin-bottom: 0.9rem;
 }
 
@@ -710,14 +653,6 @@ form {
   background-color: #fff5f5;
 }
 
-.mensaje-error {
-  display: block;
-  margin-top: 0.3rem;
-  color: #e53935;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
 /* Anchos específicos */
 .campo-dni {
   width: 100%;
@@ -753,6 +688,7 @@ form {
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
+  margin-top: 10px;
 }
 
 .campo-politica input[type="checkbox"] {
@@ -779,13 +715,40 @@ form {
   margin-bottom: 0;
 }
 
+.xestion-pacientes {
+  padding-bottom: 1.25rem;
+}
+
+/* Espacio fijo y compacto: una sola línea incluso con errores */
+.contenedor-errores {
+  height: 18px;
+  min-height: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contenedor-errores .mensaje-error {
+  margin: 0;
+  line-height: 18px;
+  font-size: 0.8rem;
+  color: #e53935;
+  font-weight: 600;
+  text-align: center;
+}
+
+.error-oculto {
+  visibility: hidden;
+}
+
 /* =========================
    BOTÓN
    ========================= */
 
 .btn-guardar {
   display: block;
-  margin: 0.5rem 0 0;
+  margin: 0;
+  margin-top: -7px;
 
   min-width: 130px;
   padding: 0.55rem 1.8rem;
@@ -821,7 +784,8 @@ form {
 }
 
 .btn-limpiar {
-  margin: 0.5rem 0 0;
+  margin: 0;
+  margin-top: -7px;
 
   border: 1px solid;
   border-radius: 5px;
@@ -896,6 +860,7 @@ table {
   margin-top: 0.3rem;
 
   border-collapse: collapse;
+  table-layout: fixed;
 
   font-size: 0.85rem;
   background-color: #fff;
@@ -924,6 +889,29 @@ th {
 td {
   text-align: center;
   color: #444;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Anchuras calculadas para priorizar el correo sin comprimir acciones */
+.tabla-pacientes .col-numero {
+  width: 6%;
+}
+.tabla-pacientes .col-dni {
+  width: 16%;
+}
+.tabla-pacientes .col-nome {
+  width: 16%;
+}
+.tabla-pacientes .col-correo {
+  width: 33%;
+}
+.tabla-pacientes .col-provincia {
+  width: 16%;
+}
+.tabla-pacientes .col-accions {
+  width: 13%;
 }
 
 tbody tr:nth-child(even) {
@@ -1052,11 +1040,13 @@ td button:active {
     height: 40px;
   }
 
-  /* Permite desplazar la tabla horizontalmente */
-  table {
-    display: block;
+  /* El contenedor desplaza la tabla, sin romper sus columnas */
+  .tabla-scroll {
     overflow-x: auto;
-    white-space: nowrap;
+  }
+
+  .tabla-pacientes {
+    min-width: 700px;
   }
 
   th,
@@ -1096,66 +1086,32 @@ td button:active {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* =========================
-   PAGINACIÓN
-   ========================= */
-
-.paginacion {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 15px;
-  margin-bottom: 10px;
-}
-
-.paginacion button {
-  min-width: 34px;
-  height: 32px;
-  padding: 0 10px;
-
-  background-color: #ffffff;
-  color: #174d32;
-
-  border: 1px solid #5fcf91;
+/* Tabla con scroll vertical al superar aproximadamente seis pacientes */
+.tabla-scroll {
+  max-height: 378px;
+  overflow-y: auto;
+  overflow-x: auto;
   border-radius: 5px;
-
-  font-size: 0.85rem;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
-.paginacion button:hover:not(:disabled) {
-  background-color: #e5ffef;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+.tabla-pacientes {
+  margin-top: 0;
 }
 
-.paginacion button.activa {
-  background-color: #89fcbd;
-  color: #174d32;
-  border-color: #5fcf91;
+.tabla-pacientes thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f3f7f5;
 }
 
-.paginacion button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.tabla-pacientes tbody tr {
+  height: 54px;
 }
 
-/* Filas vacías: conservan el tamaño de la tabla */
-.fila-vacia td {
-  height: 46px;
-  padding: 0.7rem 0.6rem;
-  background-color: #ffffff;
+@media (max-width: 768px) {
+  .tabla-scroll {
+    max-height: 378px;
+  }
 }
-
-.fila-vacia:hover {
-  background-color: #ffffff;
-}
-
 </style>
