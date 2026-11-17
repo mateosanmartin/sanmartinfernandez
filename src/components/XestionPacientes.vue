@@ -108,14 +108,14 @@
           <select
             id="provincia"
             v-model="novoPaciente.propac"
-            @change="cargarMunicipios"
+            @change="novoPaciente.munipac = ''; cargarMunicipios()"
             required
           >
             <option value="">Seleccionar</option>
             <option
               v-for="provincia in provincias"
               :key="provincia.id"
-              :value="provincia.id"
+              :value="provincia.nm"
             >
               {{ provincia.nm }}
             </option>
@@ -133,7 +133,7 @@
             <option
               v-for="municipio in municipios"
               :key="municipio.id"
-              :value="municipio.id"
+              :value="municipio.nm"
             >
               {{ municipio.nm }}
             </option>
@@ -232,7 +232,7 @@
             <td class="dni-tabla">{{ u.dnipac }}</td>
             <td>{{ u.nomepac }}</td>
             <td>{{ u.mailpac }}</td>
-            <td>{{ u.propac }}</td>
+            <td>{{ nombreProvincia(u.propac) }}</td>
 
             <td class="acciones">
               <button
@@ -369,13 +369,31 @@ const telefonoValido = computed(() => {
   return /^[67]\d{8}$/.test(telefono);
 });
 
+function nombreProvincia(valor) {
+  const provincia = provincias.value.find(
+    (p) => String(p.id) === String(valor) || p.nm === valor,
+  );
+  return provincia?.nm ?? valor;
+}
+
 async function cargarMunicipios() {
-  if (novoPaciente.propac === "") {
-    municipios.value = [];
+  municipios.value = [];
+  if (!novoPaciente.propac) return;
+
+  const provincia = provincias.value.find(
+    (p) => p.nm === novoPaciente.propac,
+  );
+  if (!provincia) {
+    console.error("Provincia no encontrada:", novoPaciente.propac);
     return;
   }
 
-  municipios.value = await obtenerMunicipios(novoPaciente.propac);
+  try {
+    municipios.value = await obtenerMunicipios(provincia.id);
+  } catch (error) {
+    console.error("Error al cargar municipios:", error);
+    alertaError("No se pudieron cargar los municipios.");
+  }
 }
 
 async function buscarPaciente() {
@@ -408,19 +426,16 @@ async function buscarPaciente() {
 // Gardar ou actualizar paciente
 async function guardarPaciente() {
   try {
-    const provincia = provincias.value.find(
-      (p) => p.id === novoPaciente.propac,
-    );
+    const pacienteParaGuardar = { ...novoPaciente };
 
-    const municipio = municipios.value.find(
-      (m) => m.id === novoPaciente.munipac,
-    );
-
-    const pacienteParaGuardar = {
-      ...novoPaciente,
-      propac: provincia.nm,
-      munipac: municipio.nm,
-    };
+    if (!provincias.value.some((p) => p.nm === pacienteParaGuardar.propac)) {
+      alertaError("Selecciona una provincia válida.");
+      return;
+    }
+    if (!municipios.value.some((m) => m.nm === pacienteParaGuardar.munipac)) {
+      alertaError("Selecciona un municipio válido.");
+      return;
+    }
 
     let pacienteGuardado;
 
@@ -513,35 +528,38 @@ async function eliminarPaciente(index) {
 // Editar paciente
 async function editarPaciente(index) {
   const paciente = pacientes.value[index];
-
   Object.assign(novoPaciente, paciente);
-
   seleccionarPaciente(paciente);
 
-  const provincia = provincias.value.find((p) => p.nm === paciente.propac);
+  const provincia = provincias.value.find(
+    (p) => p.nm === String(paciente.propac) || String(p.id) === String(paciente.propac),
+  );
 
+  municipios.value = [];
   if (provincia) {
-    novoPaciente.propac = provincia.id;
-
-    municipios.value = await obtenerMunicipios(provincia.id);
-
-    const municipio = municipios.value.find((m) => m.nm === paciente.munipac);
-
-    if (municipio) {
-      novoPaciente.munipac = municipio.id;
+    novoPaciente.propac = provincia.nm;
+    try {
+      municipios.value = await obtenerMunicipios(provincia.id);
+      const municipio = municipios.value.find(
+        (m) => m.nm === String(paciente.munipac) || String(m.id) === String(paciente.munipac),
+      );
+      novoPaciente.munipac = municipio?.nm ?? "";
+    } catch (error) {
+      console.error("Error al cargar municipios:", error);
+      novoPaciente.munipac = "";
+      alertaError("No se pudieron cargar los municipios.");
     }
+  } else {
+    novoPaciente.propac = "";
+    novoPaciente.munipac = "";
   }
 
   novoPaciente.lodpac = true;
-
   editandoIndex.value = index;
   dniComprobado.value = true;
   telefonoComprobado.value = true;
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // EXPORTAR PACIENTES A PDF

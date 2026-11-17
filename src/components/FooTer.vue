@@ -17,6 +17,7 @@
   padding: 0.2rem 1rem;
   margin-top: 1rem;
   font-size: 0.9rem;
+  font-weight: bold;
   height: 40px;
   width: 1087px;
   position: fixed;
