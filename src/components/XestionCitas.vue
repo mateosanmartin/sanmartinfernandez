@@ -1,6 +1,6 @@
 <template>
   <div class="xestion-citas">
-    <h4>📅 Xestión de Citas 🩺</h4>
+    <h4>📅 Xestión de Citas</h4>
 
     <form @submit.prevent="guardarCita">
       <div class="fila fila-principal">
@@ -26,22 +26,18 @@
 
         <div class="campo">
           <label>Doctor:</label>
-          <select v-model="novaCita.doctorId" required>
-            <option value="">Seleccionar doctor</option>
-            <option
-              v-for="doctor in doctores"
-              :key="doctor._id"
-              :value="doctor._id"
-            >
-              {{ doctor.nomedoc }} {{ doctor.apeldoc }}
-            </option>
-          </select>
+          <input
+            :value="nombreDoctorMostrado"
+            type="text"
+            placeholder="Doctor seleccionado"
+            readonly
+          />
         </div>
 
         <div class="campo">
           <label>ID Doctor:</label>
           <input
-            :value="doctorSeleccionado ? doctorSeleccionado._id : ''"
+            :value="doctorIdEfectivo"
             type="text"
             placeholder="ID Doctor"
             readonly
@@ -155,9 +151,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { usePacienteStore } from "../store/pacienteStore.js";
-import { getDoctores } from "../api/doctores.js";
+import { useDoctorStore } from "../store/doctorStore.js";
 import { getCitas, saveCita, updateCita, deleteCita } from "../api/citas.js";
 import {
   alertaExito,
@@ -166,15 +162,15 @@ import {
 } from "../utils/alertas.js";
 
 const pacienteStore = usePacienteStore();
+const doctorStore = useDoctorStore();
 
 const citas = ref([]);
-const doctores = ref([]);
 
 const editando = ref(false);
 const idCitaEditar = ref("");
 
 const novaCita = reactive({
-  doctorId: "",
+  doctorId: doctorStore.doctorId,
   fecha: "",
   hora: "",
   motivo: "",
@@ -182,27 +178,25 @@ const novaCita = reactive({
   estado: "pendente",
 });
 
-const doctorSeleccionado = computed(() => {
-  return doctores.value.find((doctor) => doctor._id === novaCita.doctorId);
+const doctorIdEfectivo = computed(() =>
+  editando.value ? novaCita.doctorId : doctorStore.doctorId
+);
+
+const nombreDoctorMostrado = computed(() => {
+  if (editando.value && nombreDoctorCita.value) return nombreDoctorCita.value;
+  return `${doctorStore.nomedoc} ${doctorStore.apeldoc}`.trim();
 });
 
+const nombreDoctorCita = ref("");
+
 const formularioValido = computed(() => {
-  return (
+  return Boolean(
     pacienteStore.dnipac &&
-    novaCita.doctorId !== "" &&
+    doctorIdEfectivo.value !== "" &&
     novaCita.fecha !== "" &&
     novaCita.hora !== "" &&
     novaCita.motivo.trim() !== ""
   );
-});
-
-onMounted(async () => {
-  try {
-    doctores.value = await getDoctores();
-  } catch (error) {
-    console.error("Error ao cargar doctores:", error);
-    alertaError("Error ao cargar os doctores.");
-  }
 });
 
 watch(
@@ -212,6 +206,11 @@ watch(
     await cargarCitas();
   },
   { immediate: true },
+);
+
+watch(
+  () => doctorStore.doctorId,
+  () => limpiarFormulario(),
 );
 
 async function cargarCitas() {
@@ -241,7 +240,7 @@ async function guardarCita() {
 
   const datosCita = {
     pacienteDNI: pacienteStore.dnipac,
-    doctorId: novaCita.doctorId,
+    doctorId: doctorIdEfectivo.value,
     fecha: novaCita.fecha,
     hora: novaCita.hora,
     motivo: novaCita.motivo,
@@ -275,8 +274,16 @@ async function guardarCita() {
 }
 
 function editarCita(cita) {
+  const idDoctorCita = cita.doctorId?._id || cita.doctorId;
+  if (!idDoctorCita) {
+    alertaError("Esta cita non ten un doctor válido asociado.");
+    return;
+  }
   idCitaEditar.value = cita._id;
-  novaCita.doctorId = cita.doctorId?._id || cita.doctorId;
+  novaCita.doctorId = idDoctorCita;
+  nombreDoctorCita.value = typeof cita.doctorId === "object"
+    ? `${cita.doctorId.nomedoc || ""} ${cita.doctorId.apeldoc || ""}`.trim()
+    : "Doctor da cita";
   novaCita.fecha = cita.fecha;
   novaCita.hora = cita.hora;
   novaCita.motivo = cita.motivo;
@@ -317,7 +324,7 @@ async function eliminarCita(cita) {
 
 function limpiarFormulario() {
   Object.assign(novaCita, {
-    doctorId: "",
+    doctorId: doctorStore.doctorId,
     fecha: "",
     hora: "",
     motivo: "",
@@ -327,11 +334,13 @@ function limpiarFormulario() {
 
   idCitaEditar.value = "";
   editando.value = false;
+  nombreDoctorCita.value = "";
 }
 
 function limpiarTodo() {
   limpiarFormulario();
   pacienteStore.limpiarPaciente();
+  doctorStore.limpiarDoctor();
 }
 </script>
 

@@ -211,6 +211,9 @@ import {
 } from "../utils/alertas.js";
 
 import { generarPDF } from "../utils/pdf.js";
+import { useDoctorStore } from "../store/doctorStore.js";
+
+const doctorStore = useDoctorStore();
 
 // LISTAS
 const doctores = ref([]);
@@ -317,6 +320,7 @@ async function guardarDoctor() {
       }
 
       await modifyDoctor(idDoctorEditar.value, doctorParaGuardar);
+      doctorStore.seleccionarDoctor({ _id: idDoctorEditar.value, ...doctorParaGuardar });
 
       await alertaExito("El doctor se ha actualizado correctamente.");
     } else {
@@ -347,6 +351,7 @@ function editarDoctor(index) {
   });
 
   idDoctorEditar.value = doctor._id;
+  doctorStore.seleccionarDoctor(doctor);
   editando.value = true;
   telefonoComprobado.value = true;
 
@@ -367,6 +372,10 @@ async function eliminarDoctor(index) {
       const doctor = doctores.value[index];
 
       await deleteDoctor(doctor._id);
+
+      if (doctorStore.doctorId === doctor._id) {
+        doctorStore.limpiarDoctor();
+      }
 
       await alertaExito("Doctor eliminado correctamente.");
 

@@ -398,7 +398,10 @@ async function buscarPaciente() {
     return;
   }
 
-  // Si existe, cargar sus datos
+  // Si existe, seleccionarlo también en Pinia
+  seleccionarPaciente(pacientes.value[index]);
+
+  // Cargar sus datos en el formulario
   await editarPaciente(index);
 }
 
@@ -1102,5 +1105,4 @@ td button:active {
   background-color: #f3f7f5;
   border: 1.8px solid;
 }
-
 </style>

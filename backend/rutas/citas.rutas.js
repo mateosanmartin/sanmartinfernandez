@@ -1,43 +1,47 @@
+
 import express from "express";
 import mongoose from "mongoose";
 import Cita from "../modelos/Cita.js";
+import Doctor from "../modelos/Doctor.js";
 
 const router = express.Router();
 
+// OBTENER CITAS
 router.get("/", async (req, res) => {
   try {
     const filtro = {};
 
-    if (req.query.pacienteId) {
-      if (!mongoose.isValidObjectId(req.query.pacienteId)) {
-        return res.status(400).json({ error: "Paciente non válido" });
-      }
-
-      filtro.pacienteId = req.query.pacienteId;
+    // Filtrar por DNI del paciente
+    if (req.query.pacienteDNI) {
+      filtro.pacienteDNI = req.query.pacienteDNI;
     }
 
     const citas = await Cita.find(filtro)
-      .populate("pacienteId", "dnipac nomepac apelpac")
-      .populate("doctorId", "iddoc nomedoc apeldoc")
+      .populate("doctorId", "nomedoc apeldoc")
       .sort({ fecha: 1, hora: 1 });
 
     res.json(citas);
+
   } catch (error) {
+    console.error("Error ao cargar citas:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// CREAR CITA
 router.post("/", async (req, res) => {
   try {
     const cita = new Cita(req.body);
     const citaGuardada = await cita.save();
 
     res.status(201).json(citaGuardada);
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
+// ACTUALIZAR CITA
 router.put("/:id", async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -55,11 +59,13 @@ router.put("/:id", async (req, res) => {
     }
 
     res.json(cita);
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
+// ELIMINAR CITA
 router.delete("/:id", async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -73,6 +79,7 @@ router.delete("/:id", async (req, res) => {
     }
 
     res.json({ mensaje: "Cita eliminada" });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
