@@ -36,6 +36,6 @@
 }
 
 .aviso-legal:hover {
-  color: blue;
+  color: rgb(6, 95, 46);
 }
 </style>

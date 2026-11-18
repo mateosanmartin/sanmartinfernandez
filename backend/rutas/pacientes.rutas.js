@@ -1,6 +1,6 @@
+
 import express from "express";
 import Paciente from "../modelos/Paciente.js";
-import { alertaError } from "../../src/utils/alertas.js";
 
 const router = express.Router();
 
@@ -11,10 +11,10 @@ router.get("/", async (req, res) => {
     res.json(pacientes);
   } catch (error) {
     console.error("ERROR AL OBTENER PACIENTES:", error);
+
     res.status(500).json({
       mensaje: "Error al obtener los pacientes",
     });
-    alertaError("Error al obtener los pacientes, contacte con el Administrador.")
   }
 });
 
@@ -29,10 +29,10 @@ router.post("/", async (req, res) => {
     res.status(201).json(nuevoPaciente);
   } catch (error) {
     console.error("ERROR AL CREAR PACIENTE:", error);
+
     res.status(500).json({
       mensaje: "Error al crear el paciente",
     });
-    alertaError("Error al crear paciente, contacte con el Administrador.")
   }
 });
 
@@ -42,7 +42,7 @@ router.put("/:id", async (req, res) => {
     const pacienteActualizado = await Paciente.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!pacienteActualizado) {
@@ -54,10 +54,10 @@ router.put("/:id", async (req, res) => {
     res.json(pacienteActualizado);
   } catch (error) {
     console.error("ERROR AL ACTUALIZAR PACIENTE:", error);
+
     res.status(500).json({
       mensaje: "Error al actualizar el paciente",
     });
-    alertaError("Error al actualizar paciente, contacte con el Administrador.")
   }
 });
 
@@ -75,14 +75,12 @@ router.delete("/:id", async (req, res) => {
     }
 
     res.json(pacienteEliminado);
-
   } catch (error) {
     console.error("ERROR AL ELIMINAR PACIENTE:", error);
 
     res.status(500).json({
       mensaje: "Error al eliminar el paciente",
     });
-    alertaError("Error al eliminar paciente, contacte con el Administrador.")
   }
 });
 

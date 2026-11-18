@@ -8,6 +8,8 @@ import AvisoLegal from "../components/AvisoLegal.vue";
 import PoliticaPrivacidad from "../components/PoliticaPrivacidad.vue";
 import XestionDoctores from "../components/XestionDoctores.vue";
 import XestionCitas from "../components/XestionCitas.vue";
+import TariFas from "../components/TariFas.vue";
+import AxendaDia from "../components/AxendaDia.vue";
 
 const routes = [
   { path: "/", name: IniCio, component: IniCio },
@@ -33,7 +35,17 @@ const routes = [
     path: "/xestion-citas",
     name: XestionCitas,
     component: XestionCitas
-  }
+  },
+  {
+  path: "/tarifas",
+  name: "Tarifas",
+  component: TariFas
+},
+{
+  path: "/axenda-dia",
+  name: "AxendaDia",
+  component: AxendaDia
+}
 ];
 
 const router = createRouter({

@@ -16,6 +16,7 @@ import FooTer from "./components/FooTer.vue";
 </script>
 
 <style>
+
 body {
   margin: 0;
   background: #f6f6f6;
@@ -27,6 +28,16 @@ body {
   flex-direction: column;
 }
 
+/* NAVBAR FIJO ARRIBA */
+nav {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+/* CONTENIDO */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -40,18 +51,12 @@ body {
   box-sizing: border-box;
 }
 
-/* NAVBAR */
-nav {
-  position: relative;
-  width: 100%;
-  z-index: 1000;
-}
-
 /* FOOTER */
 footer {
   position: relative;
   width: 100%;
-  z-index: 1000;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 /* MÓVIL */

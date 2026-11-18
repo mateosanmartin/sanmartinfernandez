@@ -33,30 +33,13 @@ router.get("/especialidad/:especialidad", async (req, res) => {
   }
 });
 
-// CREAR DOCTOR
+
+ // CREAR DOCTOR
 router.post("/", async (req, res) => {
   try {
     console.log("Datos recibidos:", req.body);
 
-    // Buscar el último doctor registrado
-    const ultimoDoctor = await Doctor.findOne().sort({ iddoc: -1 });
-
-    // Calcular el siguiente identificador
-    let nuevoId = 1;
-
-    if (ultimoDoctor && ultimoDoctor.iddoc) {
-      nuevoId =
-        parseInt(ultimoDoctor.iddoc.replace("DOC", "")) + 1;
-    }
-
-    // Generar identificador automático
-    const iddoc = "DOC" + String(nuevoId).padStart(3, "0");
-
-    // Crear el doctor con su identificador
-    const doctor = new Doctor({
-      ...req.body,
-      iddoc: iddoc,
-    });
+    const doctor = new Doctor(req.body);
 
     const nuevoDoctor = await doctor.save();
 

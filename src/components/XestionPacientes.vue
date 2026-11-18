@@ -260,6 +260,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
 import { obtenerProvincias, obtenerMunicipios } from "../api/municipios.js";
@@ -278,7 +279,6 @@ import { generarPDF } from "../utils/pdf.js";
 import { usePacienteStore } from "../store/pacienteStore.js";
 
 const pacientes = ref([]);
-
 const provincias = ref([]);
 const municipios = ref([]);
 
@@ -295,17 +295,20 @@ const novoPaciente = reactive({
   lodpac: false,
 });
 
-// Índice del paciente que estamos editando.
-// null significa que estamos creando uno nuevo.
-
 const editandoIndex = ref(null);
-
 const dniComprobado = ref(false);
 const telefonoComprobado = ref(false);
 
 onMounted(async () => {
-  provincias.value = await obtenerProvincias();
-  pacientes.value = await getPacientes();
+  try {
+    provincias.value = await obtenerProvincias();
+    pacientes.value = await getPacientes();
+  } catch (error) {
+    console.error("Error al cargar pacientes o provincias:", error);
+    await alertaError(
+      "No se pudieron cargar los datos. Comprueba la conexión con el servidor."
+    );
+  }
 });
 
 function seleccionarPaciente(paciente) {
@@ -315,18 +318,14 @@ function seleccionarPaciente(paciente) {
 
 const dniValido = computed(() => {
   const dni = novoPaciente.dnipac.trim().toUpperCase();
-
   const letras = "TRWAGMYFPDXBNJZSQVHLCKE";
 
-  // DNI: 8 números + letra
   if (/^\d{8}[A-Z]$/.test(dni)) {
     const numero = parseInt(dni.substring(0, 8), 10);
     const letra = dni.charAt(8);
-
     return letras[numero % 23] === letra;
   }
 
-  // NIE: X/Y/Z + 7 números + letra
   if (/^[XYZ]\d{7}[A-Z]$/.test(dni)) {
     const prefijo = {
       X: "0",
@@ -343,6 +342,11 @@ const dniValido = computed(() => {
   return false;
 });
 
+const telefonoValido = computed(() => {
+  const telefono = novoPaciente.movilpac.trim();
+  return /^[67]\d{8}$/.test(telefono);
+});
+
 const mensajeValidacion = computed(() => {
   if (
     dniComprobado.value &&
@@ -351,6 +355,7 @@ const mensajeValidacion = computed(() => {
   ) {
     return "⚠️ O DNI introducido non é válido.";
   }
+
   if (
     telefonoComprobado.value &&
     novoPaciente.movilpac.trim() !== "" &&
@@ -358,31 +363,33 @@ const mensajeValidacion = computed(() => {
   ) {
     return "⚠️ O teléfono debe comezar por 6 ou 7 e ter 9 díxitos.";
   }
+
   return "";
 });
-const hayErrorValidacion = computed(() => mensajeValidacion.value !== "");
 
-const telefonoValido = computed(() => {
-  const telefono = novoPaciente.movilpac.trim();
-
-  // Debe empezar por 6 o 7 y tener exactamente 9 dígitos
-  return /^[67]\d{8}$/.test(telefono);
-});
+const hayErrorValidacion = computed(
+  () => mensajeValidacion.value !== ""
+);
 
 function nombreProvincia(valor) {
   const provincia = provincias.value.find(
-    (p) => String(p.id) === String(valor) || p.nm === valor,
+    (p) =>
+      String(p.id) === String(valor) ||
+      p.nm === valor
   );
+
   return provincia?.nm ?? valor;
 }
 
 async function cargarMunicipios() {
   municipios.value = [];
+
   if (!novoPaciente.propac) return;
 
   const provincia = provincias.value.find(
-    (p) => p.nm === novoPaciente.propac,
+    (p) => p.nm === novoPaciente.propac
   );
+
   if (!provincia) {
     console.error("Provincia no encontrada:", novoPaciente.propac);
     return;
@@ -392,48 +399,51 @@ async function cargarMunicipios() {
     municipios.value = await obtenerMunicipios(provincia.id);
   } catch (error) {
     console.error("Error al cargar municipios:", error);
-    alertaError("No se pudieron cargar los municipios.");
+    await alertaError("No se pudieron cargar los municipios.");
   }
 }
 
 async function buscarPaciente() {
   const dni = novoPaciente.dnipac.trim().toUpperCase();
 
-  // Comprobar que el DNI sea válido
   if (!dniValido.value) {
     dniComprobado.value = true;
     return;
   }
 
-  // Buscar paciente por DNI
   const index = pacientes.value.findIndex(
-    (paciente) => paciente.dnipac.toUpperCase() === dni,
+    (paciente) => paciente.dnipac.toUpperCase() === dni
   );
 
-  // Si no existe
   if (index === -1) {
-    alert("No existe ningún paciente con ese DNI.");
+    await alertaError("No existe ningún paciente con ese DNI.");
     return;
   }
 
-  // Si existe, seleccionarlo también en Pinia
   seleccionarPaciente(pacientes.value[index]);
-
-  // Cargar sus datos en el formulario
   await editarPaciente(index);
 }
 
-// Gardar ou actualizar paciente
+// GUARDAR O ACTUALIZAR PACIENTE
 async function guardarPaciente() {
   try {
     const pacienteParaGuardar = { ...novoPaciente };
 
-    if (!provincias.value.some((p) => p.nm === pacienteParaGuardar.propac)) {
-      alertaError("Selecciona una provincia válida.");
+    if (
+      !provincias.value.some(
+        (p) => p.nm === pacienteParaGuardar.propac
+      )
+    ) {
+      await alertaError("Selecciona una provincia válida.");
       return;
     }
-    if (!municipios.value.some((m) => m.nm === pacienteParaGuardar.munipac)) {
-      alertaError("Selecciona un municipio válido.");
+
+    if (
+      !municipios.value.some(
+        (m) => m.nm === pacienteParaGuardar.munipac
+      )
+    ) {
+      await alertaError("Selecciona un municipio válido.");
       return;
     }
 
@@ -441,43 +451,48 @@ async function guardarPaciente() {
 
     if (editandoIndex.value !== null) {
       const confirmacion = await alertaConfirmacion(
-        "¿Estás seguro de que quieres actualizar este paciente?",
+        "¿Estás seguro de que quieres actualizar este paciente?"
       );
 
-      if (!confirmacion.isConfirmed) {
-        return;
-      }
+      if (!confirmacion.isConfirmed) return;
 
-      // ACTUALIZAR PACIENTE
-      const pacienteActual = pacientes.value[editandoIndex.value];
+      const pacienteActual =
+        pacientes.value[editandoIndex.value];
 
       pacienteGuardado = await updatePaciente(
         pacienteActual._id,
-        pacienteParaGuardar,
+        pacienteParaGuardar
       );
 
       pacientes.value[editandoIndex.value] = pacienteGuardado;
 
-      await alertaExito("El paciente se ha actualizado correctamente.");
+      await alertaExito(
+        "El paciente se ha actualizado correctamente."
+      );
     } else {
-      // CREAR PACIENTE
       pacienteGuardado = await savePaciente(pacienteParaGuardar);
 
       pacientes.value.push(pacienteGuardado);
 
-      await alertaExito("El paciente se ha guardado correctamente.");
+      await alertaExito(
+        "El paciente se ha guardado correctamente."
+      );
     }
 
     seleccionarPaciente(pacienteGuardado);
-
     limpiarFormulario();
+
   } catch (error) {
-    console.error("Error ao gardar paciente:", error);
-    alertaError("Error al guardar paciente, contacte con el Administrador.");
+    console.error("Error al guardar paciente:", error);
+
+    await alertaError(
+      error.response?.data?.mensaje ||
+      "Error al guardar paciente, contacte con el administrador."
+    );
   }
 }
 
-// Limpiar formulario
+// LIMPIAR FORMULARIO
 function limpiarFormulario() {
   Object.assign(novoPaciente, {
     dnipac: "",
@@ -492,63 +507,79 @@ function limpiarFormulario() {
     lodpac: false,
   });
 
+  municipios.value = [];
   editandoIndex.value = null;
   dniComprobado.value = false;
   telefonoComprobado.value = false;
 }
 
-// Eliminar paciente
+// ELIMINAR PACIENTE
 async function eliminarPaciente(index) {
   try {
     const confirmacion = await alertaConfirmacion(
-      "¿Estás seguro de eliminar el paciente?",
+      "¿Estás seguro de eliminar el paciente?"
     );
 
-    if (confirmacion.isConfirmed) {
-      const paciente = pacientes.value[index];
+    if (!confirmacion.isConfirmed) return;
 
-      await deletePaciente(paciente._id);
+    const paciente = pacientes.value[index];
 
-      pacientes.value.splice(index, 1);
+    await deletePaciente(paciente._id);
 
-      alertaExito("Paciente eliminado correctamente.");
+    pacientes.value.splice(index, 1);
 
-      if (editandoIndex.value === index) {
-        limpiarFormulario();
-      }
-    } else {
-      return;
+    await alertaExito("Paciente eliminado correctamente.");
+
+    if (editandoIndex.value === index) {
+      limpiarFormulario();
     }
+
   } catch (error) {
     console.error("Error al eliminar paciente:", error);
-    alertaError("Error al eliminar paciente, contacte con el administrador.");
+
+    await alertaError(
+      error.response?.data?.mensaje ||
+      "Error al eliminar paciente, contacte con el administrador."
+    );
   }
 }
 
-// Editar paciente
+// EDITAR PACIENTE
 async function editarPaciente(index) {
   const paciente = pacientes.value[index];
+
   Object.assign(novoPaciente, paciente);
   seleccionarPaciente(paciente);
 
   const provincia = provincias.value.find(
-    (p) => p.nm === String(paciente.propac) || String(p.id) === String(paciente.propac),
+    (p) =>
+      p.nm === String(paciente.propac) ||
+      String(p.id) === String(paciente.propac)
   );
 
   municipios.value = [];
+
   if (provincia) {
     novoPaciente.propac = provincia.nm;
+
     try {
       municipios.value = await obtenerMunicipios(provincia.id);
+
       const municipio = municipios.value.find(
-        (m) => m.nm === String(paciente.munipac) || String(m.id) === String(paciente.munipac),
+        (m) =>
+          m.nm === String(paciente.munipac) ||
+          String(m.id) === String(paciente.munipac)
       );
+
       novoPaciente.munipac = municipio?.nm ?? "";
+
     } catch (error) {
       console.error("Error al cargar municipios:", error);
+
       novoPaciente.munipac = "";
-      alertaError("No se pudieron cargar los municipios.");
+      await alertaError("No se pudieron cargar los municipios.");
     }
+
   } else {
     novoPaciente.propac = "";
     novoPaciente.munipac = "";
@@ -572,12 +603,13 @@ function exportarPacientes() {
       paciente.dnipac,
       paciente.nomepac,
       paciente.mailpac,
-      paciente.propac,
+      nombreProvincia(paciente.propac),
     ]),
-    "listado_pacientes.pdf",
+    "listado_pacientes.pdf"
   );
 }
 </script>
+
 
 <style scoped>
 .xestion-pacientes {

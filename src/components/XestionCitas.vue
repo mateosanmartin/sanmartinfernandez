@@ -347,7 +347,7 @@ function limpiarTodo() {
 <style scoped>
 .xestion-citas {
   width: 100%;
-  padding: 1.5rem 2rem;
+  padding: 0.5rem 2rem;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);

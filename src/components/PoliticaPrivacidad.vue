@@ -61,3 +61,34 @@
     </p>
   </div>
 </template>
+<style scoped>
+.politica-privacidad {
+  width: 100%;
+  padding: 25px 30px 40px;
+  box-sizing: border-box;
+
+  height: auto;
+  max-height: none;
+  overflow: visible;
+
+  background: white;
+  border-radius: 8px;
+}
+
+.politica-privacidad h4,
+.politica-privacidad h5 {
+  margin-bottom: 15px;
+}
+
+.politica-privacidad p {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .politica-privacidad {
+    margin: 10px auto;
+    padding: 20px 15px 30px;
+  }
+}
+</style>
