@@ -1,12 +1,64 @@
-
 <template>
+  <!--
+    CONTENEDOR PRINCIPAL
+
+    Este div contiene el formulario y la tabla
+    de gestión de doctores.
+
+    La clase xestion-doctores aplica los estilos
+    CSS definidos en el componente.
+  -->
   <div class="xestion-doctores">
     <h4>🩺 Xestión de doctores</h4>
 
+    <!--
+      FORMULARIO
+
+      @submit.prevent="guardarDoctor":
+
+      @submit escucha el evento submit.
+
+      .prevent evita el comportamiento
+      predeterminado del navegador, que
+      normalmente recargaría la página.
+
+      guardarDoctor es la función que crea
+      o actualiza un doctor.
+
+      IMPORTANTE:
+      Pulsar el botón type="submit"
+      ejecuta esta función.
+    -->
     <form @submit.prevent="guardarDoctor">
+      <!-- PRIMERA FILA: nombre, apellidos y colegiado. -->
       <div class="fila">
+        <!-- CAMPO NOMBRE -->
         <div class="campo">
           <label for="nome">Nome:</label>
+
+          <!--
+            v-model="novoDoctor.nomedoc":
+            Vincula el input con la propiedad
+            nomedoc del objeto reactivo novoDoctor.
+
+            Si el usuario escribe, se actualiza
+            la propiedad automáticamente.
+
+            Si el script cambia la propiedad,
+            también cambia el valor del input.
+
+            type="text":
+            Campo de texto.
+
+            required:
+            Campo obligatorio.
+
+            @blur="corrixirNome":
+            Ejecuta la función corrixirNome
+            cuando el input pierde el foco.
+
+            Por ejemplo, al pulsar fuera del campo.
+          -->
           <input
             id="nome"
             v-model="novoDoctor.nomedoc"
@@ -16,8 +68,18 @@
           />
         </div>
 
+        <!-- CAMPO APELLIDOS -->
         <div class="campo">
           <label for="apelidos">Apelidos:</label>
+
+          <!--
+            Funciona como el campo nombre.
+
+            @blur="corrixirApelido":
+            Ejecuta la función que corrige
+            el formato de los apellidos cuando
+            el usuario abandona el campo.
+          -->
           <input
             id="apelidos"
             v-model="novoDoctor.apeldoc"
@@ -26,20 +88,85 @@
             @blur="corrixirApelido"
           />
         </div>
-
+        
+        <!-- CAMPO ESPECIALIDAD -->
         <div class="campo">
-          <label for="colexiado">Colexiado:</label>
-          <select id="colexiado" v-model="novoDoctor.coledoc" required>
+          <label for="especialidade">Especialidade:</label>
+
+          <!--
+            SELECT DE ESPECIALIDADES
+
+            v-model="novoDoctor.espedoc":
+            Guarda la especialidad seleccionada.
+
+            El array especialidades se carga
+            desde la API en el script.
+
+            v-for="especialidade in especialidades":
+            Recorre el array de especialidades.
+
+            Por cada objeto genera una opción.
+
+            :key="especialidade.id":
+            Identifica de forma única cada opción.
+
+            :value="especialidade.nm":
+            Utiliza el nombre de la especialidad
+            como valor que se guarda.
+
+            {{ especialidade.nm }}:
+            Muestra ese nombre al usuario.
+          -->
+          <select id="especialidade" v-model="novoDoctor.espedoc" required>
             <option value="">Seleccionar</option>
-            <option :value="true">Si</option>
-            <option :value="false">Non</option>
+            <option
+              v-for="especialidade in especialidades"
+              :key="especialidade.id"
+              :value="especialidade.nm"
+            >
+              {{ especialidade.nm }}
+            </option>
           </select>
+
+          <!--
+            BOTÓN BUSCAR POR ESPECIALIDAD
+
+            type="button":
+            No envía el formulario.
+
+            @click="buscarDoctoresPorEspecialidad":
+            Ejecuta la función que filtra
+            el listado según la especialidad
+            seleccionada en el formulario.
+          -->
+          <button
+            type="button"
+            class="btn-buscar"
+            @click="buscarDoctoresPorEspecialidad"
+          >
+            🔎
+          </button>
         </div>
+        
       </div>
 
+      <!-- SEGUNDA FILA: correo, teléfono y especialidad. -->
       <div class="fila">
+        <!-- CAMPO CORREO -->
         <div class="campo">
           <label for="correo">Correo:</label>
+
+          <!--
+            type="email":
+            El navegador comprueba el formato
+            básico de una dirección de correo.
+
+            v-model:
+            Guarda el correo en novoDoctor.maildoc.
+
+            required:
+            Impide enviar el formulario vacío.
+          -->
           <input
             id="correo"
             v-model="novoDoctor.maildoc"
@@ -48,8 +175,49 @@
           />
         </div>
 
+        <!-- CAMPO TELÉFONO -->
         <div class="campo">
           <label for="telefono">Teléfono:</label>
+
+          <!--
+            VALIDACIÓN VISUAL DEL TELÉFONO
+
+            type="tel":
+            Campo destinado a números de teléfono.
+
+            maxlength="9":
+            Limita la entrada a nueve caracteres.
+
+            v-model="novoDoctor.movildoc":
+            Guarda el teléfono introducido.
+
+            :class:
+            Añade clases CSS dinámicamente.
+
+            'input-error' se añade cuando
+            se cumplen las tres condiciones:
+
+            1. telefonoComprobado es true.
+            2. El teléfono no está vacío.
+            3. telefonoValido es false.
+
+            && es el operador lógico AND.
+            Todas las condiciones deben ser true.
+
+            @blur:
+            Cuando el campo pierde el foco,
+            activa la comprobación si contiene texto.
+
+            @input:
+            Cuando el usuario vuelve a escribir,
+            pone telefonoComprobado a false.
+
+            Esto permite retirar temporalmente
+            el aviso mientras corrige el número.
+
+            telefonoValido es un computed del script
+            que comprueba el formato del teléfono.
+          -->
           <input
             id="telefono"
             v-model="novoDoctor.movildoc"
@@ -66,30 +234,93 @@
             @input="telefonoComprobado = false"
           />
         </div>
-
+        
         <div class="campo">
-          <label for="especialidade">Especialidade:</label>
-          <select id="especialidade" v-model="novoDoctor.espedoc" required>
-            <option value="">Seleccionar</option>
-            <option
-              v-for="especialidade in especialidades"
-              :key="especialidade.id"
-              :value="especialidade.nm"
-            >
-              {{ especialidade.nm }}
-            </option>
-          </select>
-          <button
-            type="button"
-            class="btn-buscar"
-            @click="buscarDoctoresPorEspecialidad"
-          >
-            🔎
-          </button>
+          <label for="colexiado">Colexiado:</label>
+
+          <!--
+            SELECT CON VALORES BOOLEANOS
+
+            v-model="novoDoctor.coledoc":
+            Guarda la opción seleccionada.
+
+            Primera opción:
+            value="" -> cadena vacía.
+
+            Segunda opción:
+            :value="true" -> booleano true.
+
+            Tercera opción:
+            :value="false" -> booleano false.
+
+            MUY IMPORTANTE PARA EL EXAMEN:
+
+            value="false" guardaría el texto "false".
+
+            :value="false" guarda el booleano false.
+
+            Los dos puntos indican que Vue
+            evalúa la expresión JavaScript.
+
+            required:
+            Obliga a seleccionar una opción válida.
+          -->
+
+          <!-- Radio para indicar que SI está colegiado -->
+          <label class="radio-opcion">
+            <input
+              v-model="novoDoctor.coledoc"
+              type="radio"
+              name="colexiado"
+              :value="true"
+              required
+            />
+            Si
+          </label>
+
+          <label class="radio-opcion">
+            <input
+              v-model="novoDoctor.coledoc"
+              type="radio"
+              name="colexiado"
+              :value="false"
+              required
+            />
+            Non
+          </label>
         </div>
+        <!-- CAMPO COLEGIADO -->
       </div>
 
+      <!--
+        CONTENEDOR DE ERRORES
+
+        aria-live="polite":
+        Indica a las tecnologías de asistencia
+        que deben anunciar los cambios del texto
+        sin interrumpir inmediatamente al usuario.
+
+        El contenedor reserva espacio para
+        los mensajes de validación.
+      -->
       <div class="contenedor-errores" aria-live="polite">
+        <!--
+          MENSAJE DE VALIDACIÓN
+
+          :class="{ 'error-oculto': !hayErrorValidacion }":
+
+          Añade la clase error-oculto cuando
+          NO existe un error de validación.
+
+          ! es el operador lógico NOT.
+
+          {{ mensajeValidacion }}:
+          Muestra el texto calculado en el script.
+
+          En tu código, el mensaje aparece
+          cuando el teléfono introducido
+          no cumple el formato esperado.
+        -->
         <p
           class="mensaje-error"
           :class="{ 'error-oculto': !hayErrorValidacion }"
@@ -98,7 +329,42 @@
         </p>
       </div>
 
+      <!-- BOTONES DEL FORMULARIO -->
       <div class="botones-formulario">
+        <!--
+          BOTÓN GUARDAR / ACTUALIZAR
+
+          type="submit":
+          Envía el formulario y activa guardarDoctor.
+
+          :disabled:
+          Deshabilita el botón si alguna de
+          las condiciones es verdadera.
+
+          || es el operador lógico OR.
+
+          Las condiciones comprueban:
+
+          - Nombre vacío.
+          - Apellidos vacíos.
+          - Correo vacío.
+          - Teléfono no válido.
+          - Colegiado sin seleccionar.
+          - Especialidad sin seleccionar.
+
+          trim():
+          Elimina espacios al principio y al final.
+
+          EXPRESIÓN TERNARIA:
+
+          editando ? "Actualizar" : "Gardar"
+
+          Si editando es true, muestra Actualizar.
+          Si editando es false, muestra Gardar.
+
+          El mismo botón sirve para crear
+          y actualizar doctores.
+        -->
         <button
           type="submit"
           class="btn-guardar"
@@ -114,15 +380,47 @@
           {{ editando ? "Actualizar" : "Gardar" }}
         </button>
 
+        <!--
+          BOTÓN LIMPIAR / CANCELAR
+
+          type="button":
+          No envía el formulario.
+
+          @click="limpiaFormdoc":
+          Ejecuta la función que limpia
+          el formulario y reinicia la edición.
+
+          La expresión ternaria cambia el texto
+          dependiendo del modo actual.
+
+          Si estamos editando -> Cancelar.
+          Si no estamos editando -> 🧹.
+        -->
         <button type="button" class="btn-limpiar" @click="limpiaFormdoc">
           {{ editando ? "Cancelar" : "🧹" }}
         </button>
       </div>
     </form>
 
+    <!--
+      CABECERA DEL LISTADO
+
+      Muestra el título de la tabla y
+      el botón de exportación a PDF.
+    -->
     <h4 class="titulo-listado">
       📋 Listaxe de doctores
 
+      <!--
+        EXPORTAR PDF
+
+        @click="exportarDoctores":
+        Ejecuta la función que genera el PDF.
+
+        :disabled="doctores.length === 0":
+        Deshabilita el botón cuando el array
+        de doctores está vacío.
+      -->
       <button
         type="button"
         class="btn-pdf"
@@ -133,8 +431,28 @@
       </button>
     </h4>
 
+    <!--
+      TABLA CONDICIONAL
+
+      v-if="doctores.length > 0":
+      Muestra la tabla si existe al menos
+      un doctor en el array.
+
+      Si está vacío, se ejecuta el v-else
+      situado después de este div.
+    -->
     <div class="tabla-contenedor" v-if="doctores.length > 0">
       <table class="tabla-doctores">
+        <!--
+          COLGROUP
+
+          Agrupa las columnas de una tabla
+          para poder aplicarles estilos CSS.
+
+          Cada <col> corresponde a una columna.
+
+          No genera filas ni datos nuevos.
+        -->
         <colgroup>
           <col class="col-numero" />
           <col class="col-apelidos" />
@@ -146,6 +464,14 @@
           <col class="col-accions" />
         </colgroup>
 
+        <!--
+          THEAD
+
+          Contiene las cabeceras de la tabla.
+
+          tr = fila.
+          th = celda de cabecera.
+        -->
         <thead>
           <tr>
             <th>#</th>
@@ -159,21 +485,116 @@
           </tr>
         </thead>
 
+        <!--
+          TBODY
+
+          Contiene las filas con los datos
+          de los doctores recuperados de la API.
+        -->
         <tbody>
+          <!--
+            DIRECTIVA v-for
+
+            v-for="(u, index) in doctores":
+
+            u:
+            Objeto del doctor actual.
+
+            index:
+            Posición del doctor en el array,
+            empezando en 0.
+
+            :key="u._id || index":
+
+            Si u._id tiene un valor truthy,
+            se utiliza como clave.
+
+            En caso contrario, se utiliza index.
+
+            _id es el identificador generado
+            por MongoDB.
+
+            El operador || devuelve el primer
+            operando truthy, o el último
+            si ninguno lo es.
+          -->
           <tr v-for="(u, index) in doctores" :key="u._id || index">
+            <!--
+              NÚMERO DE FILA
+
+              index empieza en 0.
+
+              index + 1 permite mostrar:
+              1, 2, 3, 4...
+
+              No modifica el array original.
+            -->
             <td>{{ index + 1 }}</td>
+
+            <!-- Apellidos del doctor. -->
             <td>{{ u.apeldoc }}</td>
+
+            <!-- Nombre del doctor. -->
             <td>{{ u.nomedoc }}</td>
+
+            <!-- Teléfono del doctor. -->
             <td>{{ u.movildoc }}</td>
+
+            <!-- Correo del doctor. -->
             <td>{{ u.maildoc }}</td>
+
+            <!-- Especialidad del doctor. -->
             <td>{{ u.espedoc }}</td>
+
+            <!--
+              COLEGIADO
+
+              Utiliza una expresión ternaria.
+
+              Si u.coledoc es true -> "Si".
+              Si u.coledoc es false -> "Non".
+
+              Así mostramos un texto legible
+              en lugar de true o false.
+            -->
             <td>{{ u.coledoc ? "Si" : "Non" }}</td>
 
+            <!--
+              COLUMNA DE ACCIONES
+
+              Contiene los botones para editar
+              y eliminar el doctor actual.
+            -->
             <td class="acciones">
+              <!--
+                EDITAR DOCTOR
+
+                @click="editarDoctor(index)":
+                Pasa la posición del doctor
+                a la función editarDoctor.
+
+                La función utiliza ese índice
+                para recuperar el objeto
+                del array y rellenar el formulario.
+
+                title="Editar":
+                Texto descriptivo del botón.
+              -->
               <button type="button" @click="editarDoctor(index)" title="Editar">
                 ✏️
               </button>
 
+              <!--
+                ELIMINAR DOCTOR
+
+                @click="eliminarDoctor(index)":
+                Pasa la posición del doctor
+                a la función de eliminación.
+
+                La función del script se encarga
+                de gestionar la confirmación
+                y la petición correspondiente.
+              -->
               <button
                 type="button"
                 @click="eliminarDoctor(index)"
@@ -187,15 +608,59 @@
       </table>
     </div>
 
+    <!--
+      v-else
+
+      Se muestra únicamente cuando
+      doctores.length > 0 es falso.
+
+      Es decir, cuando no hay doctores
+      en el array que se está mostrando.
+    -->
     <p v-else>Non hai doctores cargados.</p>
   </div>
 </template>
 
 <script setup>
+/*
+  IMPORTACIONES DE VUE
+
+  ref:
+  Crea variables reactivas. Para acceder a su valor
+  desde JavaScript necesitamos utilizar .value.
+
+  reactive:
+  Crea objetos reactivos cuyas propiedades se pueden
+  modificar directamente, sin utilizar .value.
+
+  computed:
+  Crea valores calculados que se actualizan
+  automáticamente cuando cambian sus dependencias.
+
+  onMounted:
+  Ejecuta una función cuando el componente
+  se ha montado en la página.
+*/
 import { ref, reactive, computed, onMounted } from "vue";
 
+/*
+  FUNCIÓN DE LA API
+
+  obtenerEspecialidades:
+  Obtiene las especialidades médicas del backend
+  para mostrarlas en el formulario y en los filtros.
+*/
 import { obtenerEspecialidades } from "../api/especialidades.js";
 
+/*
+  FUNCIONES CRUD DE DOCTORES
+
+  saveDoctor: crea un doctor.
+  getDoctores: obtiene todos los doctores.
+  getDoctorByEspecialidad: obtiene doctores de una especialidad.
+  modifyDoctor: actualiza un doctor existente.
+  deleteDoctor: elimina un doctor.
+*/
 import {
   saveDoctor,
   getDoctores,
@@ -204,28 +669,93 @@ import {
   deleteDoctor,
 } from "../api/doctores.js";
 
+/*
+  FUNCIONES DE ALERTAS
+
+  alertaExito: informa de una operación correcta.
+  alertaError: informa de un error.
+  alertaConfirmacion: pregunta antes de actualizar o eliminar.
+*/
 import {
   alertaExito,
   alertaError,
   alertaConfirmacion,
 } from "../utils/alertas.js";
 
+// Utilidad para generar documentos PDF.
 import { generarPDF } from "../utils/pdf.js";
+
+// Store de Pinia para compartir el doctor seleccionado.
 import { useDoctorStore } from "../store/doctorStore.js";
 
+/*
+  Obtenemos una instancia del store de doctores.
+
+  Esto permite seleccionar un doctor y utilizar
+  sus datos desde otros componentes, como XestionCitas.
+*/
 const doctorStore = useDoctorStore();
 
 // LISTAS
+
+/*
+  doctores:
+  Array reactivo con los doctores que mostramos en la tabla.
+
+  especialidades:
+  Array reactivo con las especialidades disponibles.
+
+  Inicialmente ambos arrays están vacíos.
+*/
 const doctores = ref([]);
 const especialidades = ref([]);
 
 // CONTROL DE EDICIÓN Y FILTRO
+
+/*
+  editando:
+  false -> estamos creando un doctor.
+  true -> estamos modificando uno existente.
+
+  idDoctorEditar:
+  Guarda el _id del doctor que estamos editando.
+  null significa que no estamos editando ninguno.
+
+  filtroEspecialidad:
+  Guarda la especialidad elegida en el filtro.
+  Una cadena vacía significa que mostramos todas.
+
+  telefonoComprobado:
+  Controla cuándo mostramos los mensajes
+  de validación del teléfono.
+*/
 const editando = ref(false);
 const idDoctorEditar = ref(null);
 const filtroEspecialidad = ref("");
 const telefonoComprobado = ref(false);
 
 // FORMULARIO
+
+/*
+  OBJETO REACTIVO: novoDoctor
+
+  Guarda los datos del formulario.
+
+  nomedoc: nombre del doctor.
+  apeldoc: apellidos.
+  maildoc: correo electrónico.
+  movildoc: teléfono móvil.
+  coledoc: situación de colegiación.
+  espedoc: especialidad médica.
+
+  reactive hace que Vue detecte los cambios
+  realizados en cualquiera de estas propiedades.
+
+  EJEMPLO:
+  novoDoctor.nomedoc = "Ana";
+
+  No necesitamos utilizar novoDoctor.value.
+*/
 const novoDoctor = reactive({
   nomedoc: "",
   apeldoc: "",
@@ -236,11 +766,72 @@ const novoDoctor = reactive({
 });
 
 // VALIDAR TELÉFONO
+
+/*
+  COMPUTED: telefonoValido
+
+  OBJETIVO:
+  Comprobar si el teléfono introducido es válido.
+
+  PASO A PASO:
+
+  1. Obtenemos novoDoctor.movildoc.
+  2. trim() elimina los espacios del principio y del final.
+  3. Utilizamos una expresión regular para comprobarlo.
+  4. test() devuelve true o false.
+
+  EXPRESIÓN REGULAR:
+  /^[67]\d{8}$/
+
+  ^       Inicio del texto.
+  [67]    Debe empezar por 6 o por 7.
+  \d{8}   Después debe tener ocho dígitos.
+  $       Final del texto.
+
+  Por tanto, el teléfono debe tener nueve dígitos.
+
+  EJEMPLOS:
+  612345678 -> true.
+  712345678 -> true.
+  512345678 -> false.
+  61234567  -> false.
+
+  Es computed porque depende de novoDoctor.movildoc.
+*/
 const telefonoValido = computed(() => {
   const telefono = novoDoctor.movildoc.trim();
   return /^[67]\d{8}$/.test(telefono);
 });
 
+/*
+  COMPUTED: mensajeValidacion
+
+  OBJETIVO:
+  Determinar si debemos mostrar un mensaje de error.
+
+  COMPROBACIONES:
+
+  telefonoComprobado.value:
+  Indica si debemos mostrar el resultado de la validación.
+
+  novoDoctor.movildoc.trim() !== "":
+  Comprueba que el teléfono no esté vacío.
+
+  !telefonoValido.value:
+  Comprueba que el teléfono NO sea válido.
+
+  OPERADORES:
+
+  && significa Y: todas las condiciones deben cumplirse.
+
+  ! significa negación:
+  !true es false y !false es true.
+
+  Si las condiciones se cumplen, devolvemos
+  el mensaje de error.
+
+  Si no, devolvemos una cadena vacía.
+*/
 const mensajeValidacion = computed(() => {
   if (
     telefonoComprobado.value &&
@@ -252,9 +843,43 @@ const mensajeValidacion = computed(() => {
   return "";
 });
 
+/*
+  COMPUTED: hayErrorValidacion
+
+  OBJETIVO:
+  Saber si existe algún mensaje de error.
+
+  Si mensajeValidacion es distinto de "",
+  devuelve true.
+
+  Si está vacío, devuelve false.
+
+  !== es una comparación estricta de desigualdad.
+*/
 const hayErrorValidacion = computed(() => mensajeValidacion.value !== "");
 
 // CARGAR DATOS AL ENTRAR
+
+/*
+  ONMOUNTED: CARGA INICIAL
+
+  OBJETIVO:
+  Obtener las especialidades y los doctores
+  cuando abrimos este componente.
+
+  PASO A PASO:
+
+  1. onMounted ejecuta la función al montar el componente.
+  2. try intenta realizar las operaciones.
+  3. await obtenerEspecialidades() espera los datos.
+  4. Guardamos el resultado en especialidades.value.
+  5. await cargarDoctores() carga los doctores.
+  6. Si ocurre un error, catch lo captura.
+  7. Mostramos el error por consola y una alerta.
+
+  IMPORTANTE:
+  async permite utilizar await dentro de la función.
+*/
 onMounted(async () => {
   try {
     especialidades.value = await obtenerEspecialidades();
@@ -266,6 +891,24 @@ onMounted(async () => {
 });
 
 // OBTENER TODOS LOS DOCTORES
+
+/*
+  FUNCIÓN: cargarDoctores()
+
+  OBJETIVO:
+  Obtener todos los doctores desde el backend.
+
+  PASO A PASO:
+
+  1. Llamamos a getDoctores().
+  2. await espera la respuesta del servidor.
+  3. Guardamos el array recibido en doctores.value.
+  4. Vue actualiza automáticamente la tabla.
+  5. Si falla la petición, mostramos un error.
+
+  IMPORTANTE:
+  getDoctores() es una función de src/api/doctores.js.
+*/
 async function cargarDoctores() {
   try {
     doctores.value = await getDoctores();
@@ -276,6 +919,33 @@ async function cargarDoctores() {
 }
 
 // FILTRAR DOCTORES POR ESPECIALIDAD
+
+/*
+  FUNCIÓN: filtrarDoctores()
+
+  OBJETIVO:
+  Mostrar los doctores de una especialidad concreta
+  o todos los doctores si no hay filtro.
+
+  PASO A PASO:
+
+  1. Comprobamos filtroEspecialidad.value.
+
+  2. Si es una cadena vacía:
+     llamamos a getDoctores() para obtener todos.
+
+  3. Si tiene una especialidad:
+     llamamos a getDoctorByEspecialidad()
+     pasando la especialidad seleccionada.
+
+  4. Guardamos el resultado en doctores.value.
+
+  5. Si ocurre un error, lo capturamos con catch.
+
+  IMPORTANTE:
+  El filtro se realiza mediante una petición al backend,
+  no mediante filter() en el navegador.
+*/
 async function filtrarDoctores() {
   try {
     if (filtroEspecialidad.value === "") {
@@ -289,12 +959,77 @@ async function filtrarDoctores() {
   }
 }
 
+/*
+  FUNCIÓN: buscarDoctoresPorEspecialidad()
+
+  OBJETIVO:
+  Buscar doctores utilizando la especialidad
+  seleccionada en el formulario.
+
+  PASO A PASO:
+
+  1. Copiamos novoDoctor.espedoc al filtro.
+  2. Llamamos a filtrarDoctores().
+  3. await espera a que termine la búsqueda.
+
+  EJEMPLO:
+  Si novoDoctor.espedoc es "Pediatría",
+  se mostrarán los doctores de Pediatría.
+*/
 async function buscarDoctoresPorEspecialidad() {
   filtroEspecialidad.value = novoDoctor.espedoc;
   await filtrarDoctores();
 }
 
 // GUARDAR O ACTUALIZAR DOCTOR
+
+/*
+  FUNCIÓN: guardarDoctor()
+
+  OBJETIVO:
+  Crear un doctor nuevo o actualizar uno existente.
+
+  PASO 1: VALIDAR EL TELÉFONO
+
+  Si telefonoValido.value es false,
+  terminamos la función con return.
+
+  PASO 2: PREPARAR LOS DATOS
+
+  Creamos doctorParaGuardar con los campos
+  que queremos enviar al backend.
+
+  trim() elimina espacios sobrantes del nombre,
+  apellidos, correo y teléfono.
+
+  PASO 3: COMPROBAR EL MODO EDICIÓN
+
+  Si editando.value es true:
+  - Pedimos confirmación.
+  - Si el usuario cancela, terminamos.
+  - Llamamos a modifyDoctor() con el _id.
+  - Actualizamos el doctor seleccionado en Pinia.
+  - Mostramos una alerta de éxito.
+
+  Si editando.value es false:
+  - Llamamos a saveDoctor().
+  - Mostramos una alerta de éxito.
+
+  PASO 4: ACTUALIZAR LA INTERFAZ
+
+  limpiaFormdoc() restablece el formulario.
+  filtrarDoctores() actualiza la tabla.
+
+  PASO 5: GESTIONAR ERRORES
+
+  catch captura los errores producidos
+  dentro del bloque try.
+
+  IMPORTANTE:
+  El operador spread (...doctorParaGuardar)
+  copia las propiedades de ese objeto dentro
+  del nuevo objeto enviado al store.
+*/
 async function guardarDoctor() {
   if (!telefonoValido.value) {
     return;
@@ -320,7 +1055,10 @@ async function guardarDoctor() {
       }
 
       await modifyDoctor(idDoctorEditar.value, doctorParaGuardar);
-      doctorStore.seleccionarDoctor({ _id: idDoctorEditar.value, ...doctorParaGuardar });
+      doctorStore.seleccionarDoctor({
+        _id: idDoctorEditar.value,
+        ...doctorParaGuardar,
+      });
 
       await alertaExito("El doctor se ha actualizado correctamente.");
     } else {
@@ -338,6 +1076,40 @@ async function guardarDoctor() {
 }
 
 // EDITAR DOCTOR
+
+/*
+  FUNCIÓN: editarDoctor(index)
+
+  OBJETIVO:
+  Cargar los datos de un doctor existente
+  en el formulario para poder modificarlos.
+
+  PARÁMETRO:
+  index: posición del doctor dentro del array doctores.
+
+  PASO A PASO:
+
+  1. Obtenemos el doctor utilizando su índice.
+
+  2. Object.assign() copia las propiedades
+     indicadas al objeto reactivo novoDoctor.
+
+  3. Guardamos el _id del doctor que editamos.
+
+  4. Guardamos el doctor en Pinia.
+
+  5. editando.value = true activa el modo edición.
+
+  6. telefonoComprobado.value = true activa
+     la visualización de la validación del teléfono.
+
+  7. window.scrollTo() desplaza la página
+     al principio para mostrar el formulario.
+
+  IMPORTANTE:
+  Object.assign() modifica el objeto original.
+  No sustituye el objeto reactive por otro.
+*/
 function editarDoctor(index) {
   const doctor = doctores.value[index];
 
@@ -362,6 +1134,44 @@ function editarDoctor(index) {
 }
 
 // ELIMINAR DOCTOR
+
+/*
+  FUNCIÓN: eliminarDoctor(index)
+
+  OBJETIVO:
+  Eliminar un doctor después de pedir confirmación.
+
+  PARÁMETRO:
+  index: posición del doctor dentro del array.
+
+  PASO A PASO:
+
+  1. Pedimos confirmación al usuario.
+
+  2. Si confirma, obtenemos el doctor
+     mediante doctores.value[index].
+
+  3. Llamamos a deleteDoctor() pasando su _id.
+
+  4. Si el doctor eliminado coincide con el
+     seleccionado en Pinia, limpiamos el store.
+
+  5. Mostramos una alerta de éxito.
+
+  6. Si estábamos editando ese mismo doctor,
+     limpiamos el formulario.
+
+  7. Volvemos a cargar la tabla aplicando
+     el filtro de especialidad actual.
+
+  8. Si ocurre un error, catch lo captura
+     y mostramos una alerta.
+
+  IMPORTANTE:
+  El doctor se elimina del backend.
+  Después se vuelve a consultar la lista,
+  en lugar de utilizar splice() directamente.
+*/
 async function eliminarDoctor(index) {
   try {
     const confirmacion = await alertaConfirmacion(
@@ -392,6 +1202,31 @@ async function eliminarDoctor(index) {
 }
 
 // LIMPIAR FORMULARIO
+
+/*
+  FUNCIÓN: limpiaFormdoc()
+
+  OBJETIVO:
+  Dejar el formulario preparado para crear
+  un doctor nuevo.
+
+  PASO A PASO:
+
+  1. Object.assign() restablece todos los
+     campos de novoDoctor.
+
+  2. editando.value = false desactiva la edición.
+
+  3. idDoctorEditar.value = null elimina
+     el identificador del doctor en edición.
+
+  4. telefonoComprobado.value = false
+     reinicia el indicador de validación.
+
+  IMPORTANTE:
+  Object.assign() conserva la reactividad
+  del objeto novoDoctor.
+*/
 function limpiaFormdoc() {
   Object.assign(novoDoctor, {
     nomedoc: "",
@@ -408,6 +1243,43 @@ function limpiaFormdoc() {
 }
 
 // CORREGIR NOMBRE
+
+/*
+  FUNCIÓN: corrixirNome()
+
+  OBJETIVO:
+  Formatear el nombre del doctor para que
+  cada palabra empiece por mayúscula
+  y continúe en minúsculas.
+
+  PASO A PASO:
+
+  1. Comprobamos que el nombre tenga caracteres.
+
+  2. trim() elimina espacios al principio y al final.
+
+  3. split(/\s+/) divide el texto en palabras.
+     \s representa un espacio en blanco.
+     + significa uno o más.
+
+  4. map() recorre cada palabra.
+
+  5. charAt(0) obtiene su primera letra.
+
+  6. toUpperCase() convierte esa letra en mayúscula.
+
+  7. slice(1) obtiene el resto de la palabra.
+
+  8. toLowerCase() convierte el resto en minúsculas.
+
+  9. join(" ") une las palabras con un espacio.
+
+  EJEMPLO:
+  "  juAN   carLOS " -> "Juan Carlos".
+
+  IMPORTANTE:
+  map() devuelve un array nuevo.
+*/
 function corrixirNome() {
   if (novoDoctor.nomedoc.length > 0) {
     novoDoctor.nomedoc = novoDoctor.nomedoc
@@ -419,6 +1291,29 @@ function corrixirNome() {
 }
 
 // CORREGIR APELLIDOS
+
+/*
+  FUNCIÓN: corrixirApelido()
+
+  OBJETIVO:
+  Formatear los apellidos del doctor.
+
+  FUNCIONA IGUAL QUE corrixirNome():
+
+  1. Elimina espacios sobrantes.
+  2. Divide los apellidos en palabras.
+  3. Convierte la primera letra de cada palabra
+     en mayúscula.
+  4. Convierte el resto de letras en minúsculas.
+  5. Une las palabras mediante espacios.
+
+  EJEMPLO:
+  "  garCÍA   lÓPEZ " -> "García López".
+
+  IMPORTANTE:
+  No elimina tildes.
+  Solo modifica las mayúsculas y minúsculas.
+*/
 function corrixirApelido() {
   if (novoDoctor.apeldoc.length > 0) {
     novoDoctor.apeldoc = novoDoctor.apeldoc
@@ -430,6 +1325,50 @@ function corrixirApelido() {
 }
 
 // EXPORTAR DOCTORES A PDF
+
+/*
+  FUNCIÓN: exportarDoctores()
+
+  OBJETIVO:
+  Generar un PDF con el listado de doctores.
+
+  generarPDF() recibe cuatro argumentos:
+
+  1. Título del documento.
+  2. Array con las cabeceras.
+  3. Array con las filas de datos.
+  4. Nombre del archivo PDF.
+
+  PASO A PASO:
+
+  1. Definimos el título "Listado de doctores".
+
+  2. Definimos las columnas:
+     número, apellidos, nombre, móvil,
+     correo, especialidad y colegiado.
+
+  3. map() recorre el array doctores.value.
+
+  4. Por cada doctor, devuelve un array
+     con los datos de una fila.
+
+  5. index + 1 genera la numeración
+     comenzando en 1 en lugar de 0.
+
+  6. El operador ternario:
+     doctor.coledoc ? "Si" : "Non"
+
+     Devuelve "Si" si coledoc es verdadero.
+     Devuelve "Non" si es falso.
+
+  7. generarPDF() crea el documento
+     listado_doctores.pdf.
+
+  IMPORTANTE:
+  Se exportan los doctores que estén actualmente
+  en doctores.value. Si hay un filtro aplicado,
+  se exportan los resultados de ese filtro.
+*/
 function exportarDoctores() {
   generarPDF(
     "Listado de doctores",
@@ -847,4 +1786,41 @@ td button:active {
     padding: 0.6rem;
   }
 }
+
+
+.label-colexiado {
+  min-width: 80px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.radio-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.campo .radio-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 15px;
+  min-width: 0;
+  width: auto;
+  cursor: pointer;
+}
+
+.campo .radio-opcion input[type="radio"] {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  appearance: auto;
+  accent-color: #348358;
+}
+
 </style>

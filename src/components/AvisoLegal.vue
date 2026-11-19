@@ -1,8 +1,16 @@
 
 <template>
+  <!-- Contenedor principal del aviso legal. -->
   <div class="aviso-legal">
+    <!-- Título principal. -->
     <h4>Aviso legal</h4>
 
+    <!--
+      Los h5 separan las distintas secciones.
+
+      Los párrafos contienen información estática.
+      No se utilizan variables ni directivas de Vue.
+    -->
     <h5>Información general</h5>
     <p>
       Bienvenido a Sanidade Teis. El presente aviso legal regula
@@ -13,6 +21,7 @@
 
     <h5>Identificación del sitio web</h5>
     <p>
+      <!-- strong muestra el texto con importancia semántica. -->
       <strong>Nombre de la aplicación:</strong> Sanidade Teis.
     </p>
     <p>
@@ -87,6 +96,14 @@
       y servicios digitales.
     </p>
 
+    <!--
+      PÁRRAFO DESTACADO
+
+      class="aviso" aplica un fondo diferente
+      y un borde verde en el lateral izquierdo.
+
+      strong destaca la palabra "Importante".
+    -->
     <p class="aviso">
       <strong>Importante:</strong>
       Este aviso legal tiene carácter informativo y forma
@@ -98,6 +115,25 @@
 </template>
 
 <style scoped>
+/*
+  scoped:
+  Limita las reglas CSS a este componente.
+*/
+
+/*
+  CONTENEDOR PRINCIPAL
+
+  width: 100% ocupa el ancho disponible.
+  padding añade espacio interior.
+  box-sizing incluye padding dentro del ancho.
+
+  height: auto permite ajustar la altura al contenido.
+  max-height: none elimina un límite de altura.
+  overflow: visible permite mostrar el contenido.
+
+  background establece el fondo blanco.
+  border-radius redondea las esquinas.
+*/
 .aviso-legal {
   width: 100%;
   padding: 25px 30px 40px;
@@ -111,6 +147,16 @@
   border-radius: 8px;
 }
 
+/*
+  TÍTULO PRINCIPAL
+
+  margin controla el espacio exterior.
+  padding controla el espacio interior.
+  background-color establece el fondo verde.
+  color establece el color del texto.
+  font-size establece el tamaño de letra.
+  font-weight establece el grosor.
+*/
 .aviso-legal h4 {
   margin: 0 0 25px;
   padding: 12px 15px;
@@ -123,6 +169,12 @@
   font-weight: 600;
 }
 
+/*
+  SUBTÍTULOS
+
+  El selector afecta a todos los h5
+  que estén dentro de .aviso-legal.
+*/
 .aviso-legal h5 {
   margin: 25px 0 12px;
   color: #174d32;
@@ -130,6 +182,13 @@
   font-weight: 600;
 }
 
+/*
+  PÁRRAFOS
+
+  margin-bottom añade separación entre párrafos.
+  line-height aumenta el espacio entre líneas.
+  text-align: justify justifica el texto.
+*/
 .aviso-legal p {
   margin-bottom: 15px;
   line-height: 1.6;
@@ -138,6 +197,13 @@
   text-align: justify;
 }
 
+/*
+  AVISO DESTACADO
+
+  background-color establece un fondo suave.
+  border-left añade una línea verde a la izquierda.
+  border-radius redondea las esquinas.
+*/
 .aviso {
   margin-top: 30px;
   padding: 15px;
@@ -146,6 +212,17 @@
   border-left: 4px solid #5fcf91;
   border-radius: 4px;
 }
+
+/*
+  MEDIA QUERY PARA MÓVILES
+
+  Cuando el ancho de la pantalla es
+  de 768px o menos:
+
+  - Reducimos el padding.
+  - Ajustamos el margen.
+  - Alineamos los párrafos a la izquierda.
+*/
 
 /* MÓVIL */
 @media (max-width: 768px) {
