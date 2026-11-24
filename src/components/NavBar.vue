@@ -83,7 +83,7 @@
 
     <!-- MODIFICADO -->
     <ul :class="['menu', { open: isOpen }]">
-
+      <li><RouterLink to="/">Inicio</RouterLink></li>
       <!-- Enlace al componente de gestión de pacientes. -->
       <li><RouterLink to="/xestion-pacientes">Pacientes</RouterLink></li>
 
@@ -92,15 +92,9 @@
 
       <!-- Enlace al componente de gestión de citas. -->
       <li><RouterLink to="/xestion-citas">Citas</RouterLink></li>
-
-      <!-- Enlace a las tarifas médicas. -->
-      <li><router-link to="/tarifas">Tarifas</router-link></li>
-
-      <!-- Enlace a la agenda diaria. -->
-      <li><router-link to="/axenda-dia">Axenda</router-link></li>
-
       <!-- Enlace a la página Sobre nós. -->
       <li><RouterLink to="/sobrenos">Sobre nós</RouterLink></li>
+      <li><RouterLink to="/vista-acceso">Acceso</RouterLink></li>
     </ul>
   </nav>
 </template>

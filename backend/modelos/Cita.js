@@ -11,8 +11,9 @@ import mongoose from "mongoose";
   - Referencia al doctor.
   - Fecha y hora.
   - Motivo.
-  - Observaciones.
   - Estado.
+  - Diagnóstico y tratamiento.
+  - Precio de la consulta.
 
   IMPORTANTE:
   doctorId utiliza ObjectId y ref: "Doctor".
@@ -68,16 +69,18 @@ const CitaSchema = new mongoose.Schema(
         // Motivo de la consulta. Obligatorio.
         motivo: { type: String, required: true },
 
-        /*
-          OBSERVACIONES
-
-          default: "" significa que, si no se
-          proporciona este campo, su valor
-          predeterminado será una cadena vacía.
-        */
-        observacions: {
+        diagnostico: {
             type: String,
             default: ""
+        },
+
+        tratamento: {
+            type: String,
+            default: ""
+        },
+        tarifa: {
+            type: Number,
+            default: 0
         },
 
         /*

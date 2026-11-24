@@ -9,7 +9,6 @@ import mongoose from "mongoose";
 // Importamos el modelo Cita para acceder a MongoDB.
 import Cita from "../modelos/Cita.js";
 
-// Importación del modelo Doctor, conservada tal como aparece en tu archivo.
 import Doctor from "../modelos/Doctor.js";
 
 // Creamos el enrutador.
